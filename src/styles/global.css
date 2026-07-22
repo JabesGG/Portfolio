@@ -298,42 +298,42 @@ ul {
   text-wrap: pretty;
 }
 
-/* Systems schematic — decorative node graph. */
-.hero-schematic {
-  width: clamp(8.5rem, 21vw, 14rem);
+/* Portrait — framed like a blueprint callout, sits on the dark hero. */
+.hero-portrait {
+  position: relative;
+  width: clamp(9rem, 24vw, 15rem);
   justify-self: end;
+  margin: 0;
 }
 
-.hero-schematic svg {
+.hero-portrait img {
+  display: block;
   width: 100%;
   height: auto;
-  overflow: visible;
-  filter: drop-shadow(0 0 8px rgba(90, 165, 255, 0.5));
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border: 1px solid rgba(150, 180, 210, 0.35);
+  box-shadow: 0 0 34px rgba(29, 92, 143, 0.4);
 }
 
-.hero-schematic .edges line {
-  stroke: rgba(120, 180, 255, 0.5);
-  stroke-width: 1.3;
+/* Blueprint corner ticks. */
+.hero-portrait::before,
+.hero-portrait::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--bp);
+  z-index: 1;
 }
-
-.hero-schematic .nodes circle {
-  fill: var(--night);
-  stroke: var(--bp);
-  stroke-width: 1.8;
-  animation: nodepulse 3.2s ease-in-out infinite;
-  animation-delay: var(--d, 0s);
-}
-
-@keyframes nodepulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
-}
+.hero-portrait::before { top: -5px; left: -5px; border-right: 0; border-bottom: 0; }
+.hero-portrait::after { right: -5px; bottom: -5px; border-left: 0; border-top: 0; }
 
 @media (max-width: 52rem) {
   .hero-main {
     grid-template-columns: 1fr;
   }
-  .hero-schematic {
+  .hero-portrait {
     justify-self: start;
     margin-top: 0.5rem;
   }
