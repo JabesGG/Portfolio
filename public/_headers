@@ -1,0 +1,14 @@
+# Cloudflare Pages reads this file and applies these headers to every response.
+# Netlify uses the same format. If you deploy to GitHub Pages instead, note that
+# it cannot set custom headers — put Cloudflare in front, or use Pages/Netlify.
+#
+# Keep this file and src/data/portfolio.js in agreement. The site publishes
+# these values on the page, so a mismatch is a visible bug.
+
+/*
+  Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()

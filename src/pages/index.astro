@@ -1,0 +1,290 @@
+---
+import Base from "../layouts/Base.astro";
+import {
+  profile,
+  focus,
+  experience,
+  education,
+  skills,
+  projects,
+  securityHeaders,
+} from "../data/portfolio.js";
+
+const title = `${profile.name} — ${profile.role}`;
+const description = profile.statement;
+---
+
+<Base title={title} description={description}>
+  <!-- ══ Hero ══════════════════════════════════════════════ -->
+  <header class="hero">
+    <p class="hero-eyebrow rise rise-1">
+      {profile.role} · {profile.location}
+    </p>
+
+    <h1 class="hero-name rise rise-2">{profile.name}</h1>
+
+    <p class="hero-statement rise rise-3">{profile.statement}</p>
+
+    <div class="specimen rise rise-4">
+      <div class="specimen-cell">
+        <span class="specimen-key">Studying</span>
+        <span class="specimen-val">Business &amp; Financial Technology, NYP</span>
+      </div>
+      <div class="specimen-cell">
+        <span class="specimen-key">Background</span>
+        <span class="specimen-val">Electronics Engineering, ITE</span>
+      </div>
+      <div class="specimen-cell">
+        <span class="specimen-key">Status</span>
+        <span class="specimen-val">{profile.availability}</span>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ══ Approach ════════════════════════════════════════ -->
+    <section class="band">
+      <p class="mark">Approach</p>
+      <div class="body">
+        <h2 class="h-section">How I work</h2>
+        <ul class="focus-list">
+          {
+            focus.map((f) => (
+              <li class="focus-item">
+                <h3 class="focus-label">{f.label}</h3>
+                <p class="focus-body">{f.body}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <!-- ══ Projects ════════════════════════════════════════ -->
+    <section class="band" id="projects">
+      <p class="mark">Projects</p>
+      <div class="body">
+        <h2 class="h-section">Selected work</h2>
+        <div class="projects">
+          {
+            projects.map((p) => (
+              <article class="project">
+                <div class="project-frame">
+                  {
+                    p.image ? (
+                      <img src={p.image} alt={`Screenshot from ${p.title}`} loading="lazy" />
+                    ) : (
+                      <div class="project-frame-empty">
+                        <span>No screenshot yet</span>
+                      </div>
+                    )
+                  }
+                </div>
+
+                <div>
+                  <span class="project-year">{p.year}</span>
+                  <h3 class="project-title">{p.title}</h3>
+                  <p class="project-tagline">{p.tagline}</p>
+
+                  <div class="project-row">
+                    <span class="project-row-key">Stack</span>
+                    <span>{p.tags.join(" · ")}</span>
+                  </div>
+                  <div class="project-row">
+                    <span class="project-row-key">My role</span>
+                    <span>{p.role}</span>
+                  </div>
+                  <div class="project-row">
+                    <span class="project-row-key">Detail</span>
+                    <span>{p.detail}</span>
+                  </div>
+
+                  {
+                    p.link && (
+                      <div class="project-row">
+                        <span class="project-row-key">Link</span>
+                        <span>
+                          <a class="link" href={p.link}>
+                            View project
+                          </a>
+                        </span>
+                      </div>
+                    )
+                  }
+
+                  {
+                    (p.more || p.gallery) && (
+                      <details class="project-more">
+                        <summary>
+                          <span class="project-more-open">More on this project</span>
+                          <span class="project-more-close">Show less</span>
+                        </summary>
+
+                        {p.more && <p class="project-more-body">{p.more}</p>}
+
+                        {p.gallery && (
+                          <div class="project-gallery">
+                            {p.gallery.map((g) => (
+                              <figure class="shot">
+                                <img
+                                  src={g.src}
+                                  alt={`${p.title} — ${g.caption}`}
+                                  loading="lazy"
+                                />
+                                <figcaption>{g.caption}</figcaption>
+                              </figure>
+                            ))}
+                          </div>
+                        )}
+                      </details>
+                    )
+                  }
+                </div>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ Experience ══════════════════════════════════════ -->
+    <section class="band">
+      <p class="mark">Experience</p>
+      <div class="body">
+        <h2 class="h-section">Where I have worked</h2>
+        {
+          experience.map((e) => (
+            <article class="entry">
+              <span class="entry-period">{e.period}</span>
+              <h3 class="entry-role">{e.role}</h3>
+              <p class="entry-org">
+                {e.org} · {e.place}
+              </p>
+              <ul class="entry-points">
+                {e.points.map((pt) => (
+                  <li>{pt}</li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ══ Education ═══════════════════════════════════════ -->
+    <section class="band">
+      <p class="mark">Education</p>
+      <div class="body">
+        <h2 class="h-section">Training</h2>
+        {
+          education.map((e) => (
+            <article class="entry">
+              <span class="entry-period">{e.period}</span>
+              <h3 class="entry-role">{e.role}</h3>
+              <p class="entry-org">
+                {e.org} · {e.place}
+              </p>
+              <ul class="entry-points">
+                {e.points.map((pt) => (
+                  <li>{pt}</li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ══ Skills ══════════════════════════════════════════ -->
+    <section class="band">
+      <p class="mark">Skills</p>
+      <div class="body">
+        <h2 class="h-section">What I use</h2>
+        <div class="skill-grid">
+          {
+            skills.map((s) => (
+              <div>
+                <h3 class="skill-group-name">{s.group}</h3>
+                <ul class="chips">
+                  {s.items.map((i) => (
+                    <li class="chip">{i}</li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ Signature: the site audits itself ═══════════════ -->
+    <section class="band">
+      <p class="mark">Audit</p>
+      <div class="body">
+        <h2 class="h-section">This site, checked</h2>
+        <p class="lede" style="margin-bottom: 2rem;">
+          A portfolio that claims security should be able to survive being
+          pointed at. These are the response headers this page actually sends —
+          run the scan yourself and see.
+        </p>
+
+        <div class="audit">
+          <div class="audit-head">
+            <span>Response headers</span>
+            <span class="audit-status">6 / 6 set</span>
+          </div>
+          {
+            securityHeaders.map((h) => (
+              <div class="audit-row">
+                <span class="audit-name">{h.name}</span>
+                <span class="audit-value">{h.value}</span>
+                <span class="audit-note">{h.note}</span>
+              </div>
+            ))
+          }
+        </div>
+
+        <a
+          class="btn"
+          href="https://securityheaders.com"
+          rel="noopener noreferrer"
+          target="_blank">Scan this site &rarr;</a
+        >
+      </div>
+    </section>
+
+    <!-- ══ Contact ═════════════════════════════════════════ -->
+    <section class="band" id="contact">
+      <p class="mark">Contact</p>
+      <div class="body">
+        <h2 class="h-section">Get in touch</h2>
+        <div class="contact-list">
+          <div class="contact-item">
+            <span class="contact-key">Email</span>
+            <span class="contact-val">
+              <a class="link" href={`mailto:${profile.email}`}>{profile.email}</a>
+            </span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-key">Phone</span>
+            <span class="contact-val">{profile.phone}</span>
+          </div>
+          {
+            profile.links.map((l) => (
+              <div class="contact-item">
+                <span class="contact-key">{l.label}</span>
+                <span class="contact-val">
+                  <a class="link" href={l.href} rel="noopener noreferrer" target="_blank">
+                    {l.href.replace("https://", "")}
+                  </a>
+                </span>
+              </div>
+            ))
+          }
+        </div>
+
+        <a class="btn" href={profile.resumeFile}>Download resume (PDF)</a>
+      </div>
+    </section>
+  </main>
+</Base>
