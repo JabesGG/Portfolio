@@ -166,13 +166,14 @@ export const projects = [
 export const securityHeaders = [
   {
     name: "Content-Security-Policy",
-    value: "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'",
-    note: "Scripts and objects may only load from this origin, so an injected <script> tag has nowhere to load from.",
+    value:
+      "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests",
+    note: "Everything is locked to this origin — scripts, objects, form targets and the document base — with fonts the only exception (Google Fonts). An injected <script> has nowhere to run from, and the page cannot be reframed.",
   },
   {
     name: "Strict-Transport-Security",
-    value: "max-age=63072000; includeSubDomains; preload",
-    note: "Browsers refuse to speak plain HTTP to this domain for the next two years.",
+    value: "max-age=31536000; includeSubDomains; preload",
+    note: "Browsers refuse to speak plain HTTP to this domain for the next year.",
   },
   {
     name: "X-Content-Type-Options",
@@ -191,7 +192,7 @@ export const securityHeaders = [
   },
   {
     name: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=()",
-    note: "Hardware APIs are denied outright rather than left to prompt.",
+    value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+    note: "Camera, microphone, geolocation and Google's interest-cohort (FLoC) tracking are denied outright rather than left to prompt.",
   },
 ];
