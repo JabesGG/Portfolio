@@ -7,7 +7,6 @@ import {
   education,
   skills,
   projects,
-  securityHeaders,
 } from "../data/portfolio.js";
 
 const title = `${profile.name} — ${profile.role}`;
@@ -15,29 +14,66 @@ const description = profile.statement;
 ---
 
 <Base title={title} description={description}>
-  <!-- ══ Hero ══════════════════════════════════════════════ -->
+  <!-- ══ Hero — dark "blueprint at night", schematic split ═══ -->
   <header class="hero">
-    <p class="hero-eyebrow rise rise-1">
-      {profile.role} · {profile.location}
-    </p>
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <div class="hero-main">
+        <div class="hero-lead">
+          <p class="hero-eyebrow rise rise-1">
+            {profile.role} · {profile.location}
+          </p>
+          <h1 class="hero-name rise rise-2">
+            {profile.shortName.split(" ").map((word) => (
+              <span class="hn-line">{word}</span>
+            ))}
+          </h1>
+          <p class="hero-statement rise rise-3">{profile.statement}</p>
+        </div>
 
-    <h1 class="hero-name rise rise-2">{profile.name}</h1>
+        <!-- Systems schematic — decorative node graph -->
+        <div class="hero-schematic rise rise-3" aria-hidden="true">
+          <svg viewBox="0 0 200 210" role="img">
+            <g class="edges">
+              <line x1="100" y1="30" x2="34" y2="88" />
+              <line x1="100" y1="30" x2="166" y2="88" />
+              <line x1="100" y1="30" x2="100" y2="104" />
+              <line x1="34" y1="88" x2="100" y2="104" />
+              <line x1="166" y1="88" x2="100" y2="104" />
+              <line x1="34" y1="88" x2="72" y2="176" />
+              <line x1="166" y1="88" x2="128" y2="176" />
+              <line x1="100" y1="104" x2="72" y2="176" />
+              <line x1="100" y1="104" x2="128" y2="176" />
+              <line x1="34" y1="88" x2="166" y2="88" />
+            </g>
+            <g class="nodes">
+              <circle cx="100" cy="30" r="6" style="--d:0s" />
+              <circle cx="34" cy="88" r="6" style="--d:.5s" />
+              <circle cx="166" cy="88" r="6" style="--d:1s" />
+              <circle cx="100" cy="104" r="7.5" style="--d:.25s" />
+              <circle cx="72" cy="176" r="6" style="--d:1.4s" />
+              <circle cx="128" cy="176" r="6" style="--d:.8s" />
+            </g>
+          </svg>
+        </div>
+      </div>
 
-    <p class="hero-statement rise rise-3">{profile.statement}</p>
+      <div class="specimen rise rise-4">
+        <div class="specimen-cell">
+          <span class="specimen-key">Studying</span>
+          <span class="specimen-val">Business &amp; Financial Technology, NYP</span>
+        </div>
+        <div class="specimen-cell">
+          <span class="specimen-key">Focus</span>
+          <span class="specimen-val">Full-stack web &amp; data</span>
+        </div>
+        <div class="specimen-cell">
+          <span class="specimen-key">Status</span>
+          <span class="specimen-val">{profile.availability}</span>
+        </div>
+      </div>
 
-    <div class="specimen rise rise-4">
-      <div class="specimen-cell">
-        <span class="specimen-key">Studying</span>
-        <span class="specimen-val">Business &amp; Financial Technology, NYP</span>
-      </div>
-      <div class="specimen-cell">
-        <span class="specimen-key">Background</span>
-        <span class="specimen-val">Electronics Engineering, ITE</span>
-      </div>
-      <div class="specimen-cell">
-        <span class="specimen-key">Status</span>
-        <span class="specimen-val">{profile.availability}</span>
-      </div>
+      <a class="hero-scroll rise rise-4" href="#projects">View work &darr;</a>
     </div>
   </header>
 
@@ -214,42 +250,6 @@ const description = profile.statement;
             ))
           }
         </div>
-      </div>
-    </section>
-
-    <!-- ══ Signature: the site audits itself ═══════════════ -->
-    <section class="band">
-      <p class="mark">Audit</p>
-      <div class="body">
-        <h2 class="h-section">This site, checked</h2>
-        <p class="lede" style="margin-bottom: 2rem;">
-          A portfolio that claims security should be able to survive being
-          pointed at. These are the response headers this page actually sends —
-          run the scan yourself and see.
-        </p>
-
-        <div class="audit">
-          <div class="audit-head">
-            <span>Response headers</span>
-            <span class="audit-status">6 / 6 set</span>
-          </div>
-          {
-            securityHeaders.map((h) => (
-              <div class="audit-row">
-                <span class="audit-name">{h.name}</span>
-                <span class="audit-value">{h.value}</span>
-                <span class="audit-note">{h.note}</span>
-              </div>
-            ))
-          }
-        </div>
-
-        <a
-          class="btn"
-          href="https://securityheaders.com"
-          rel="noopener noreferrer"
-          target="_blank">Scan this site &rarr;</a
-        >
       </div>
     </section>
 

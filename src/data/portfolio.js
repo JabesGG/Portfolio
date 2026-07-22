@@ -6,11 +6,11 @@
 export const profile = {
   name: "Jabez Goh Dong Han",
   shortName: "Jabez Goh",
-  role: "Cybersecurity & Web Development",
+  role: "Business & Financial Technology",
   location: "Singapore",
   // Keep this to one sentence. It is the first thing anyone reads.
   statement:
-    "I build web applications and then try to break them — a business-fintech student who trusts a system only after trying to make it fail.",
+    "A Business & Financial Technology student who builds the web apps, data models and dashboards that turn business questions into decisions you can act on.",
   availability: "Open to internships from Jan 2027",
   email: "moder8ter@gmail.com",
   phone: "+65 8803 4375",
@@ -23,8 +23,8 @@ export const profile = {
 
 export const focus = [
   {
-    label: "Secure by default",
-    body: "Threat modelling and mitigation built into the application from the first commit, not audited in afterwards.",
+    label: "Numbers you can trust",
+    body: "A dashboard is only as good as the data under it. I validate inputs and document my assumptions so a decision rests on something solid, not a number that looks right.",
   },
   {
     label: "Systems thinking",
@@ -75,10 +75,9 @@ export const education = [
 ];
 
 export const skills = [
-  { group: "Languages", items: ["Python", "JavaScript", "HTML", "CSS", "SQL"] },
-  { group: "Security", items: ["Threat modelling", "Web vulnerabilities (OWASP Top 10)", "Incident response", "Log analysis"] },
-  { group: "Platforms", items: ["AWS", "Azure", "Linux", "Git"] },
-  { group: "Analysis", items: ["Power BI", "Data modelling", "Technical writing"] },
+  { group: "Data & Analysis", items: ["Power BI", "Data modelling", "SQL", "Technical writing"] },
+  { group: "Languages", items: ["Python", "JavaScript", "HTML", "CSS"] },
+  { group: "Platforms & Tools", items: ["AWS", "Azure", "Linux", "Git"] },
   { group: "Spoken", items: ["English (native)", "Chinese (proficient)"] },
 ];
 
@@ -92,14 +91,13 @@ export const projects = [
     year: "2025",
     tags: ["Web Development", "Python", "JavaScript"],
     image: "/projects/genquest.png",
-    role: "Built the registration, authentication and password-reset flows.",
+    role: "Built the registration, sign-in, profile and password-reset flows.",
     detail:
-      "I built the account layer — registration, sign-in and password reset — the flows that have to be right every time.",
-    // TODO (Jabez): name the concrete choices a security reviewer will ask about —
-    // e.g. bcrypt for password hashing, single-use expiring reset tokens, CSRF protection.
-    // Swap the intent language below for the real decision and the reason behind it.
+      "I built the account layer — registration, sign-in, profile and password reset — for a gamified habit-tracking app.",
+    // TODO (Jabez): if you want more specifics here, name the stack and how sessions
+    // and profiles were stored — concrete detail always reads stronger than intent.
     more:
-      "GenQuest turns everyday habits into a game: users earn XP, keep daily streaks, unlock achievements and join guilds, then spend what they earn in a rewards store. My part was the account layer in front of all of it — registration, sign-in, profile management and password reset. That is the code that fails loudly when it is wrong, so the work lived in the unglamorous edges: validating and normalising input before it reaches the database, keeping stored credentials out of plaintext, and making a reset request prove who is asking before it can change a password.",
+      "GenQuest turns everyday habits into a game: users earn XP, keep daily streaks, unlock achievements and join guilds, then spend what they earn in a rewards store. My part was the account layer in front of all of it — registration, sign-in, profile management and password reset — plus the input validation and session handling that keep those flows reliable. It is the part users never think about until it breaks, which is exactly why it had to be solid.",
     gallery: [
       {
         src: "/projects/genquest-login.png",
@@ -148,51 +146,40 @@ export const projects = [
     link: null,
   },
   {
-    slug: "project-three",
-    title: "Project Three",
-    tagline: "One line, plain language, no jargon",
+    slug: "arcanevault",
+    title: "ArcaneVault",
+    tagline: "A trading marketplace and live catalogue for Pokémon cards",
     year: "2026",
-    tags: ["Cybersecurity"],
-    image: "/projects/placeholder.png",
-    role: "What you personally did.",
-    detail: "What made it hard, and what you decided.",
+    // TODO (Jabez): confirm the stack (e.g. ASP.NET Core / C# / SQL) and swap the third tag.
+    tags: ["Web Development", "Full-Stack", "SQL"],
+    image: "/projects/arcanevault.png",
+    // TODO (Jabez): confirm scope — solo or team, and add a live/GitHub link below if there is one.
+    role: "Built the catalogue, marketplace, trades and the analytics dashboard.",
+    detail:
+      "A full Pokémon-card marketplace — catalogue, fixed-price and auction listings, peer-to-peer trades, and a live economy dashboard.",
+    more:
+      "ArcaneVault is a marketplace and living catalogue for Pokémon cards: 20,000+ real cards across 173 sets, each listable for sale, auction or barter with condition grades and market-value guidance. Collectors buy, bid and trade peer-to-peer, build reputation through post-trade ratings, and spend a credits wallet. Behind it sits a “Vault Signals” dashboard that treats the site like a small economy — gross merchandise value, trade velocity, sell-through, average price by rarity, and where the credits actually sit. It is my most complete build, and the one that ties everything together: full-stack web development, data modelling, and the business logic of a working market.",
+    gallery: [
+      {
+        src: "/projects/arcanevault-marketplace.png",
+        caption:
+          "Marketplace — every card listed for fixed price, auction or barter, with rarity, condition grade and market-value guidance.",
+      },
+      {
+        src: "/projects/arcanevault-analytics.png",
+        caption:
+          "Vault Signals — a live economy dashboard: gross merchandise value, trade velocity, sell-through, price by rarity, and where the credits sit.",
+      },
+      {
+        src: "/projects/arcanevault-trades.png",
+        caption:
+          "Trades — a full buy-and-sell history where collectors rate each other to build reputation.",
+      },
+    ],
     link: null,
   },
 ];
 
-// These are set at the edge in public/_headers.
-// If you change one, change it in BOTH places — the page publishes these
-// values, so a mismatch is a bug anyone can see.
-export const securityHeaders = [
-  {
-    name: "Content-Security-Policy",
-    value:
-      "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests",
-    note: "Everything is locked to this origin — scripts, objects, form targets and the document base — with fonts the only exception (Google Fonts). An injected <script> has nowhere to run from, and the page cannot be reframed.",
-  },
-  {
-    name: "Strict-Transport-Security",
-    value: "max-age=31536000; includeSubDomains; preload",
-    note: "Browsers refuse to speak plain HTTP to this domain for the next year.",
-  },
-  {
-    name: "X-Content-Type-Options",
-    value: "nosniff",
-    note: "Stops the browser second-guessing a file's type — an uploaded image cannot be run as script.",
-  },
-  {
-    name: "X-Frame-Options",
-    value: "DENY",
-    note: "The page cannot be embedded in an iframe, which rules out clickjacking.",
-  },
-  {
-    name: "Referrer-Policy",
-    value: "strict-origin-when-cross-origin",
-    note: "Outbound links leak the domain but never the full path.",
-  },
-  {
-    name: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-    note: "Camera, microphone, geolocation and Google's interest-cohort (FLoC) tracking are denied outright rather than left to prompt.",
-  },
-];
+// Security response headers are still applied at the edge via public/_headers —
+// good practice regardless of theme — but they are no longer surfaced as a
+// section on the page.

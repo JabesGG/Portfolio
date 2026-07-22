@@ -13,6 +13,14 @@
   --signal: #1d5c8f;
   --flag: #a93724;
 
+  /* Dark "blueprint at night" hero */
+  --night: #0b0e14;
+  --night-line: rgba(96, 124, 162, 0.12);
+  --bp: #6fb0ff;
+  --bp-soft: #9fc4ef;
+  --ink-on-night: #eef1f4;
+  --sub-on-night: #93a7bd;
+
   --font-display: "Archivo", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
@@ -53,6 +61,8 @@ body {
   font-size: 1rem;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+  /* The full-bleed dark hero uses 100vw; guard against a horizontal scrollbar. */
+  overflow-x: hidden;
 }
 
 img {
@@ -177,11 +187,11 @@ ul {
 
 .h-section {
   font-family: var(--font-display);
-  font-variation-settings: "wdth" 112;
-  font-weight: 600;
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  line-height: 1.1;
-  letter-spacing: -0.015em;
+  font-variation-settings: "wdth" 120;
+  font-weight: 700;
+  font-size: clamp(1.9rem, 4.2vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
   margin-bottom: 2rem;
 }
 
@@ -198,11 +208,51 @@ ul {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Hero — the name is set as an annotated component
+   Hero — dark "blueprint at night", schematic split.
+   Breaks out of the centered shell to run full-bleed.
    ═══════════════════════════════════════════════════════════ */
 
 .hero {
-  padding-block: clamp(4rem, 12vw, 8rem) var(--step);
+  position: relative;
+  isolation: isolate;
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  padding-block: clamp(4.5rem, 11vw, 8.5rem) clamp(3rem, 7vw, 5rem);
+  background: var(--night);
+  color: var(--ink-on-night);
+  overflow: hidden;
+}
+
+/* Living blueprint grid + soft glow, gently breathing. */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    radial-gradient(58% 55% at 30% 42%, rgba(29, 92, 143, 0.5), transparent 70%),
+    repeating-linear-gradient(0deg, transparent 0 31px, var(--night-line) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, var(--night-line) 31px 32px);
+  animation: heroglow 8s ease-in-out infinite alternate;
+}
+
+@keyframes heroglow {
+  from { opacity: 0.72; }
+  to { opacity: 1; }
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding-inline: var(--pad-x);
+}
+
+.hero-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2rem 3rem;
 }
 
 .hero-eyebrow {
@@ -210,50 +260,96 @@ ul {
   font-size: 0.72rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--signal);
+  color: var(--bp);
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.6rem;
 }
 
 .hero-eyebrow::after {
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--rule);
+  background: rgba(150, 180, 210, 0.28);
 }
 
 .hero-name {
   font-family: var(--font-display);
-  font-variation-settings: "wdth" 118;
-  font-weight: 700;
-  font-size: clamp(2.6rem, 9vw, 6rem);
-  line-height: 0.92;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
-  margin-bottom: 2rem;
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  font-size: clamp(3.2rem, 12vw, 8rem);
+  line-height: 0.84;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  margin-bottom: 1.6rem;
+  text-shadow: 0 0 44px rgba(60, 130, 200, 0.28);
+}
+
+.hn-line {
+  display: block;
 }
 
 .hero-statement {
-  font-size: clamp(1.1rem, 2vw, 1.4rem);
-  line-height: 1.5;
-  max-width: 46ch;
-  margin-bottom: 3rem;
+  font-size: clamp(1.05rem, 1.9vw, 1.35rem);
+  line-height: 1.55;
+  max-width: 44ch;
+  color: var(--sub-on-night);
   text-wrap: pretty;
+}
+
+/* Systems schematic — decorative node graph. */
+.hero-schematic {
+  width: clamp(8.5rem, 21vw, 14rem);
+  justify-self: end;
+}
+
+.hero-schematic svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 0 8px rgba(90, 165, 255, 0.5));
+}
+
+.hero-schematic .edges line {
+  stroke: rgba(120, 180, 255, 0.5);
+  stroke-width: 1.3;
+}
+
+.hero-schematic .nodes circle {
+  fill: var(--night);
+  stroke: var(--bp);
+  stroke-width: 1.8;
+  animation: nodepulse 3.2s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes nodepulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@media (max-width: 52rem) {
+  .hero-main {
+    grid-template-columns: 1fr;
+  }
+  .hero-schematic {
+    justify-self: start;
+    margin-top: 0.5rem;
+  }
 }
 
 /* Specimen strip: the facts a recruiter scans for, set like a parts list. */
 .specimen {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  border-top: 1px solid var(--ink);
-  border-bottom: 1px solid var(--rule);
+  border-top: 1px solid rgba(150, 180, 210, 0.28);
+  margin-top: clamp(2.5rem, 6vw, 4rem);
 }
 
 .specimen-cell {
   padding: 1rem 1.25rem 1.1rem 0;
-  border-right: 1px solid var(--rule-faint);
+  border-right: 1px solid rgba(150, 180, 210, 0.14);
 }
 
 .specimen-cell:last-child {
@@ -265,7 +361,7 @@ ul {
   font-size: 0.66rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--bp-soft);
   display: block;
   margin-bottom: 0.35rem;
 }
@@ -274,6 +370,25 @@ ul {
   font-size: 0.95rem;
   font-weight: 500;
   line-height: 1.35;
+  color: var(--ink-on-night);
+}
+
+.hero-scroll {
+  display: inline-block;
+  margin-top: 1.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bp);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(120, 180, 255, 0.4);
+  padding-bottom: 2px;
+  transition: color 0.15s ease;
+}
+
+.hero-scroll:hover {
+  color: var(--ink-on-night);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -565,6 +680,68 @@ ul {
     gap: 2rem;
     align-items: start;
   }
+}
+
+/* ─── Signature echo: schematic part numbers + blueprint corner ticks ─── */
+
+/* Section index in the gutter: 01, 02, 03 … set like drafting part numbers. */
+main {
+  counter-reset: band;
+}
+
+.band > .mark::before {
+  counter-increment: band;
+  content: counter(band, decimal-leading-zero);
+  display: block;
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 120;
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--signal);
+  margin-bottom: 0.55rem;
+}
+
+/* Project index prefixed to each title. */
+.projects {
+  counter-reset: proj;
+}
+
+.project-title::before {
+  counter-increment: proj;
+  content: counter(proj, decimal-leading-zero) "  ";
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.6em;
+  color: var(--signal);
+  vertical-align: 0.18em;
+}
+
+/* Blueprint corner ticks on project image frames. */
+.project-frame::before,
+.project-frame::after {
+  content: "";
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid var(--signal);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.project-frame::before {
+  top: 8px;
+  left: 8px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.project-frame::after {
+  right: 8px;
+  bottom: 8px;
+  border-left: 0;
+  border-top: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════
