@@ -150,8 +150,7 @@ export const projects = [
     title: "ArcaneVault",
     tagline: "A trading marketplace and live catalogue for Pokémon cards",
     year: "2026",
-    // TODO (Jabez): confirm the stack (e.g. ASP.NET Core / C# / SQL) and swap the third tag.
-    tags: ["Web Development", "Full-Stack", "SQL"],
+    tags: ["Web Development", "C#", "ASP.NET Core"],
     image: "/projects/arcanevault.png",
     // TODO (Jabez): confirm scope — solo or team, and add a live/GitHub link below if there is one.
     role: "Built the catalogue, marketplace, trades and the analytics dashboard.",
