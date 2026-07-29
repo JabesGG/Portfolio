@@ -119,8 +119,8 @@ const description = profile.statement;
                       <div class="project-row">
                         <span class="project-row-key">Link</span>
                         <span>
-                          <a class="link" href={p.link}>
-                            View project
+                          <a class="link" href={p.link} rel="noopener noreferrer" target="_blank">
+                            {p.link.replace(/^https?:\/\//, "").replace(/\/$/, "")} &nearr;
                           </a>
                         </span>
                       </div>

@@ -152,7 +152,7 @@ export const projects = [
     year: "2026",
     tags: ["Web Development", "C#", "ASP.NET Core"],
     image: "/projects/arcanevault.png",
-    // TODO (Jabez): confirm scope — solo or team, and add a live/GitHub link below if there is one.
+    // TODO (Jabez): confirm scope — solo or team.
     role: "Built the catalogue, marketplace, trades and the analytics dashboard.",
     detail:
       "A full Pokémon-card marketplace — catalogue, fixed-price and auction listings, peer-to-peer trades, and a live economy dashboard.",
@@ -175,7 +175,7 @@ export const projects = [
           "Trades — a full buy-and-sell history where collectors rate each other to build reputation.",
       },
     ],
-    link: null,
+    link: "https://www.arcanevault.app/",
   },
 ];
 
