@@ -1,0 +1,84 @@
+---
+import Base from "../layouts/Base.astro";
+import { projects, profile } from "../data/portfolio.js";
+
+const p = projects.find((x) => x.slug === "arcanevault");
+const title = `${p.title} — Case study — ${profile.shortName}`;
+const description = p.tagline;
+const domain = (p.link ?? "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+---
+
+<Base title={title} description={description}>
+  <a class="cs-back" href="/">&larr; Back to work</a>
+
+  <article>
+    <header class="cs-hero">
+      <p class="eyebrow rise rise-1">Case study · {p.year}</p>
+      <h1 class="cs-title rise rise-2">{p.title}</h1>
+      <p class="cs-lede rise rise-3">{p.tagline}</p>
+
+      {
+        p.link && (
+          <div class="feat-links rise rise-3" style="margin-top: 1.4rem;">
+            <span class="badge-live">LIVE</span>
+            <a class="link-ext" href={p.link} rel="noopener noreferrer" target="_blank">
+              {domain} &nearr;
+            </a>
+          </div>
+        )
+      }
+
+      <div class="cs-cover rise rise-4">
+        <img src={p.image} alt={`${p.title} home page`} />
+      </div>
+    </header>
+
+    <dl class="cs-meta">
+      <div>
+        <dt>My role</dt>
+        <dd>{p.role}</dd>
+      </div>
+      <div>
+        <dt>Stack</dt>
+        <dd>{p.tags.join(" · ")}</dd>
+      </div>
+      <div>
+        <dt>Year</dt>
+        <dd>{p.year}</dd>
+      </div>
+      {
+        p.link && (
+          <div>
+            <dt>Live site</dt>
+            <dd>
+              <a href={p.link} rel="noopener noreferrer" target="_blank">{domain}</a>
+            </dd>
+          </div>
+        )
+      }
+    </dl>
+
+    <section class="cs-section">
+      <p class="seclabel"><span class="dot"></span>Overview</p>
+      <p class="cs-body">{p.more}</p>
+    </section>
+
+    {
+      p.gallery && (
+        <section class="cs-section">
+          <p class="seclabel"><span class="dot"></span>Inside the build</p>
+          <div class="cs-gallery">
+            {p.gallery.map((g) => (
+              <figure class="cs-figure">
+                <img src={g.src} alt={`${p.title} — ${g.caption}`} loading="lazy" />
+                <figcaption>{g.caption}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <a class="cs-back" href="/">&larr; Back to work</a>
+  </article>
+</Base>

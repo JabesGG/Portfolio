@@ -11,259 +11,221 @@ import {
 
 const title = `${profile.name} — ${profile.role}`;
 const description = profile.statement;
+
+const arcane = projects.find((p) => p.slug === "arcanevault");
+const arcaneUrl = arcane?.link ?? "https://www.arcanevault.app/";
+const projectCount = String(projects.length).padStart(2, "0");
+
+// Flagship leads. Explicit order for the work section.
+const workOrder = ["arcanevault", "market-potential", "genquest"];
+const orderedProjects = workOrder
+  .map((s) => projects.find((p) => p.slug === s))
+  .filter(Boolean);
 ---
 
 <Base title={title} description={description}>
-  <!-- ══ Hero — dark "blueprint at night", schematic split ═══ -->
-  <header class="hero">
-    <div class="hero-grid" aria-hidden="true"></div>
-    <div class="hero-inner">
-      <div class="hero-main">
-        <div class="hero-lead">
-          <p class="hero-eyebrow rise rise-1">
-            {profile.role} · {profile.location}
-          </p>
-          <h1 class="hero-name rise rise-2">
-            {profile.shortName.split(" ").map((word) => (
-              <span class="hn-line">{word}</span>
-            ))}
-          </h1>
-          <p class="hero-statement rise rise-3">{profile.statement}</p>
-        </div>
-
-        <!-- Portrait, framed like a blueprint callout -->
-        <figure class="hero-portrait rise rise-3">
-          <img src="/me.jpg" alt="Jabez Goh" width="640" height="800" />
-        </figure>
+    <!-- ══ Nav ═════════════════════════════════════════════ -->
+    <nav class="nav">
+      <a class="nav-brand" href="#main">{profile.shortName}</a>
+      <div class="nav-links">
+        <a class="hide-sm" href="#work">Work</a>
+        <a class="hide-sm" href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <a class="ext" href={arcaneUrl} rel="noopener noreferrer" target="_blank">arcanevault.app &nearr;</a>
       </div>
+    </nav>
 
-      <div class="specimen rise rise-4">
-        <div class="specimen-cell">
-          <span class="specimen-key">Studying</span>
-          <span class="specimen-val">Business &amp; Financial Technology, NYP</span>
+    <main id="main">
+      <!-- ══ Hero ══════════════════════════════════════════ -->
+      <header class="section hero">
+        <p class="eyebrow rise rise-1">{profile.role} · {profile.location}</p>
+        <h1 class="hero-name rise rise-2">{profile.shortName}</h1>
+        <p class="hero-statement rise rise-3">{profile.statement}</p>
+        <div class="cta rise rise-3">
+          <a class="btn solid" href="#work">View work</a>
+          <a class="btn ghost" href={arcaneUrl} rel="noopener noreferrer" target="_blank">
+            arcanevault.app &nearr;
+          </a>
         </div>
-        <div class="specimen-cell">
-          <span class="specimen-key">Focus</span>
-          <span class="specimen-val">Full-stack web &amp; data</span>
+        <div class="stats rise rise-4">
+          <div class="stat"><b>{projectCount}</b><span>Projects shipped</span></div>
+          <div class="stat"><b>2025–28</b><span>BFT · Nanyang Poly</span></div>
+          <div class="stat"><b>Jan 2027</b><span>Open to internships</span></div>
         </div>
-        <div class="specimen-cell">
-          <span class="specimen-key">Status</span>
-          <span class="specimen-val">{profile.availability}</span>
-        </div>
-      </div>
+      </header>
 
-      <a class="hero-scroll rise rise-4" href="#projects">View work &darr;</a>
-    </div>
-  </header>
+      <!-- ══ Selected work (leads) ═════════════════════════ -->
+      <section class="section" id="work">
+        <p class="seclabel"><span class="dot"></span><span class="idx">01</span> · Selected work</p>
+        <h2 class="h2">Things I have built</h2>
 
-  <main id="main">
-    <!-- ══ Approach ════════════════════════════════════════ -->
-    <section class="band">
-      <p class="mark">Approach</p>
-      <div class="body">
-        <h2 class="h-section">How I work</h2>
-        <ul class="focus-list">
+        <div class="features">
+          {
+            orderedProjects.map((p) => {
+              const flagship = p.slug === "arcanevault";
+              return (
+                <article class:list={["feature", { flagship }]}>
+                  <div class="shot">
+                    <img src={p.image} alt={`${p.title} screenshot`} loading="lazy" />
+                  </div>
+                  <div class="feat-body">
+                    <p class="feat-num" />
+                    <div class="feat-top">
+                      <h3 class="feat-title">{p.title}</h3>
+                      {flagship && <span class="badge-live">LIVE</span>}
+                    </div>
+                    <p class="feat-tagline">{p.tagline}</p>
+                    <p class="feat-blurb">{p.detail}</p>
+                    <div class="chips">
+                      {p.tags.map((t) => (
+                        <span class="chip">{t}</span>
+                      ))}
+                    </div>
+                    <div class="feat-links">
+                      {flagship && (
+                        <a class="link-cs" href="/arcanevault">
+                          Case study &rarr;
+                        </a>
+                      )}
+                      {p.link && (
+                        <a class="link-ext" href={p.link} rel="noopener noreferrer" target="_blank">
+                          {p.link.replace(/^https?:\/\//, "").replace(/\/$/, "")} &nearr;
+                        </a>
+                      )}
+                    </div>
+
+                    {
+                      !flagship && (p.more || p.gallery) && (
+                        <details class="more">
+                          <summary>
+                            <span class="more-open">More on this project</span>
+                            <span class="more-close">Show less</span>
+                          </summary>
+                          {p.more && <p class="more-body">{p.more}</p>}
+                          {p.gallery && (
+                            <div class="gallery">
+                              {p.gallery.map((g) => (
+                                <figure class="shot-sm">
+                                  <img src={g.src} alt={`${p.title} — ${g.caption}`} loading="lazy" />
+                                  <figcaption>{g.caption}</figcaption>
+                                </figure>
+                              ))}
+                            </div>
+                          )}
+                        </details>
+                      )
+                    }
+                  </div>
+                </article>
+              );
+            })
+          }
+        </div>
+      </section>
+
+      <!-- ══ About ═════════════════════════════════════════ -->
+      <section class="section" id="about">
+        <p class="seclabel"><span class="dot"></span><span class="idx">02</span> · About</p>
+        <h2 class="h2">How I work</h2>
+        <div class="focus">
           {
             focus.map((f) => (
-              <li class="focus-item">
+              <div class="focus-item">
                 <h3 class="focus-label">{f.label}</h3>
                 <p class="focus-body">{f.body}</p>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-    </section>
-
-    <!-- ══ Projects ════════════════════════════════════════ -->
-    <section class="band" id="projects">
-      <p class="mark">Projects</p>
-      <div class="body">
-        <h2 class="h-section">Selected work</h2>
-        <div class="projects">
-          {
-            projects.map((p) => (
-              <article class="project">
-                <div class="project-frame">
-                  {
-                    p.image ? (
-                      <img src={p.image} alt={`Screenshot from ${p.title}`} loading="lazy" />
-                    ) : (
-                      <div class="project-frame-empty">
-                        <span>No screenshot yet</span>
-                      </div>
-                    )
-                  }
-                </div>
-
-                <div>
-                  <span class="project-year">{p.year}</span>
-                  <h3 class="project-title">{p.title}</h3>
-                  <p class="project-tagline">{p.tagline}</p>
-
-                  <div class="project-row">
-                    <span class="project-row-key">Stack</span>
-                    <span>{p.tags.join(" · ")}</span>
-                  </div>
-                  <div class="project-row">
-                    <span class="project-row-key">My role</span>
-                    <span>{p.role}</span>
-                  </div>
-                  <div class="project-row">
-                    <span class="project-row-key">Detail</span>
-                    <span>{p.detail}</span>
-                  </div>
-
-                  {
-                    p.link && (
-                      <div class="project-row">
-                        <span class="project-row-key">Link</span>
-                        <span>
-                          <a class="link" href={p.link} rel="noopener noreferrer" target="_blank">
-                            {p.link.replace(/^https?:\/\//, "").replace(/\/$/, "")} &nearr;
-                          </a>
-                        </span>
-                      </div>
-                    )
-                  }
-
-                  {
-                    (p.more || p.gallery) && (
-                      <details class="project-more">
-                        <summary>
-                          <span class="project-more-open">More on this project</span>
-                          <span class="project-more-close">Show less</span>
-                        </summary>
-
-                        {p.more && <p class="project-more-body">{p.more}</p>}
-
-                        {p.gallery && (
-                          <div class="project-gallery">
-                            {p.gallery.map((g) => (
-                              <figure class="shot">
-                                <img
-                                  src={g.src}
-                                  alt={`${p.title} — ${g.caption}`}
-                                  loading="lazy"
-                                />
-                                <figcaption>{g.caption}</figcaption>
-                              </figure>
-                            ))}
-                          </div>
-                        )}
-                      </details>
-                    )
-                  }
-                </div>
-              </article>
-            ))
-          }
-        </div>
-      </div>
-    </section>
-
-    <!-- ══ Experience ══════════════════════════════════════ -->
-    <section class="band">
-      <p class="mark">Experience</p>
-      <div class="body">
-        <h2 class="h-section">Where I have worked</h2>
-        {
-          experience.map((e) => (
-            <article class="entry">
-              <span class="entry-period">{e.period}</span>
-              <h3 class="entry-role">{e.role}</h3>
-              <p class="entry-org">
-                {e.org} · {e.place}
-              </p>
-              <ul class="entry-points">
-                {e.points.map((pt) => (
-                  <li>{pt}</li>
-                ))}
-              </ul>
-            </article>
-          ))
-        }
-      </div>
-    </section>
-
-    <!-- ══ Education ═══════════════════════════════════════ -->
-    <section class="band">
-      <p class="mark">Education</p>
-      <div class="body">
-        <h2 class="h-section">Training</h2>
-        {
-          education.map((e) => (
-            <article class="entry">
-              <span class="entry-period">{e.period}</span>
-              <h3 class="entry-role">{e.role}</h3>
-              <p class="entry-org">
-                {e.org} · {e.place}
-              </p>
-              <ul class="entry-points">
-                {e.points.map((pt) => (
-                  <li>{pt}</li>
-                ))}
-              </ul>
-            </article>
-          ))
-        }
-      </div>
-    </section>
-
-    <!-- ══ Skills ══════════════════════════════════════════ -->
-    <section class="band">
-      <p class="mark">Skills</p>
-      <div class="body">
-        <h2 class="h-section">What I use</h2>
-        <div class="skill-grid">
-          {
-            skills.map((s) => (
-              <div>
-                <h3 class="skill-group-name">{s.group}</h3>
-                <ul class="chips">
-                  {s.items.map((i) => (
-                    <li class="chip">{i}</li>
-                  ))}
-                </ul>
               </div>
             ))
           }
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ══ Contact ═════════════════════════════════════════ -->
-    <section class="band" id="contact">
-      <p class="mark">Contact</p>
-      <div class="body">
-        <h2 class="h-section">Get in touch</h2>
-        <div class="contact-list">
-          <div class="contact-item">
-            <span class="contact-key">Email</span>
-            <span class="contact-val">
-              <a class="link" href={`mailto:${profile.email}`}>{profile.email}</a>
-            </span>
+      <!-- ══ Skills ════════════════════════════════════════ -->
+      <section class="section">
+        <p class="seclabel"><span class="dot"></span><span class="idx">03</span> · Toolkit</p>
+        <h2 class="h2">What I use</h2>
+        <div class="skills">
+          {
+            skills.map((s) => (
+              <div>
+                <h3 class="skill-group-name">{s.group}</h3>
+                <div class="chips">
+                  {s.items.map((i) => (
+                    <span class="chip">{i}</span>
+                  ))}
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- ══ Experience + Education ════════════════════════ -->
+      <section class="section">
+        <p class="seclabel"><span class="dot"></span><span class="idx">04</span> · Background</p>
+        <div class="two-col">
+          <div>
+            <h2 class="h2">Experience</h2>
+            {
+              experience.map((e) => (
+                <article class="entry">
+                  <div class="entry-top">
+                    <h3 class="entry-role">{e.role}</h3>
+                    <span class="entry-period">{e.period}</span>
+                  </div>
+                  <p class="entry-org">{e.org} · {e.place}</p>
+                  <ul class="entry-points">
+                    {e.points.map((pt) => (
+                      <li>{pt}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))
+            }
           </div>
-          <div class="contact-item">
+          <div>
+            <h2 class="h2">Education</h2>
+            {
+              education.map((e) => (
+                <article class="entry">
+                  <div class="entry-top">
+                    <h3 class="entry-role">{e.role}</h3>
+                    <span class="entry-period">{e.period}</span>
+                  </div>
+                  <p class="entry-org">{e.org} · {e.place}</p>
+                </article>
+              ))
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Contact ═══════════════════════════════════════ -->
+      <section class="contact-band" id="contact">
+        <p class="seclabel"><span class="dot"></span><span class="idx">05</span> · Contact</p>
+        <h2 class="h2">Let’s talk</h2>
+        <div class="contact-grid">
+          <div>
+            <span class="contact-key">Email</span>
+            <span class="contact-val"><a class="uline" href={`mailto:${profile.email}`}>{profile.email}</a></span>
+          </div>
+          <div>
             <span class="contact-key">Phone</span>
             <span class="contact-val">{profile.phone}</span>
           </div>
           {
             profile.links.map((l) => (
-              <div class="contact-item">
+              <div>
                 <span class="contact-key">{l.label}</span>
                 <span class="contact-val">
-                  <a class="link" href={l.href} rel="noopener noreferrer" target="_blank">
-                    {l.href.replace("https://", "")}
+                  <a class="uline" href={l.href} rel="noopener noreferrer" target="_blank">
+                    {l.href.replace("https://", "").replace("www.", "")}
                   </a>
                 </span>
               </div>
             ))
           }
         </div>
-
-        <a class="btn" href={profile.resumeFile}>Download resume (PDF)</a>
-      </div>
-    </section>
-  </main>
+        <a class="contact-cta" href={profile.resumeFile}>Download résumé (PDF)</a>
+      </section>
+    </main>
 </Base>
