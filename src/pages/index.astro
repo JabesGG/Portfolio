@@ -38,20 +38,25 @@ const orderedProjects = workOrder
     <main id="main">
       <!-- ══ Hero ══════════════════════════════════════════ -->
       <header class="section hero">
-        <p class="eyebrow rise rise-1">{profile.role} · {profile.location}</p>
-        <h1 class="hero-name rise rise-2">{profile.shortName}</h1>
-        <p class="hero-statement rise rise-3">{profile.statement}</p>
-        <div class="cta rise rise-3">
-          <a class="btn solid" href="#work">View work</a>
-          <a class="btn ghost" href={arcaneUrl} rel="noopener noreferrer" target="_blank">
-            arcanevault.app &nearr;
-          </a>
+        <div class="hero-text">
+          <p class="eyebrow rise rise-1">{profile.role} · {profile.location}</p>
+          <h1 class="hero-name rise rise-2">{profile.shortName}</h1>
+          <p class="hero-statement rise rise-3">{profile.statement}</p>
+          <div class="cta rise rise-3">
+            <a class="btn solid" href="#work">View work</a>
+            <a class="btn ghost" href={arcaneUrl} rel="noopener noreferrer" target="_blank">
+              arcanevault.app &nearr;
+            </a>
+          </div>
+          <div class="stats rise rise-4">
+            <div class="stat"><b>{projectCount}</b><span>Projects shipped</span></div>
+            <div class="stat"><b>2025–28</b><span>BFT · Nanyang Poly</span></div>
+            <div class="stat"><b>Jan 2027</b><span>Open to internships</span></div>
+          </div>
         </div>
-        <div class="stats rise rise-4">
-          <div class="stat"><b>{projectCount}</b><span>Projects shipped</span></div>
-          <div class="stat"><b>2025–28</b><span>BFT · Nanyang Poly</span></div>
-          <div class="stat"><b>Jan 2027</b><span>Open to internships</span></div>
-        </div>
+        <figure class="hero-portrait rise rise-3">
+          <img src="/me.jpg" alt={profile.name} width="640" height="800" />
+        </figure>
       </header>
 
       <!-- ══ Selected work (leads) ═════════════════════════ -->
