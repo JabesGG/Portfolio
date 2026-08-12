@@ -24,8 +24,20 @@ straight into that form.
 | `icons/`, `manifest.webmanifest` | PWA assets. Icons are generated, not drawn by hand — see below. |
 | `tools/make-icons.cjs` | Renders the app icons as PNGs with no image dependencies (raw pixels + zlib). The mark is a seven-segment odometer readout. |
 | `tools/make-sw.cjs` | Writes `sw.js` **after** the build, once asset hashes are known. |
+| `tools/serve.cjs` | Serves `public/moto` locally under the *real* CSP, read out of `public/_headers`. |
 | `verify.ts` | 30 assertions over the calculations against a worked dataset. |
-| `bundle.html` / `artifact.html` | Older single-file builds, kept for the claude.ai artifact. Superseded by the PWA. |
+| `index-single.html`, `src/main-single.tsx` | Entry for the single-file build — same app, minus the service worker, which has nothing to register against on a one-page origin. |
+| `bundle.html` / `artifact.html` | Single-file builds from the same source, for the claude.ai artifact. `artifact.html` is `bundle.html` with the outer `<!DOCTYPE>/<html>/<body>` stripped, because the artifact host supplies its own skeleton. |
+
+## Run it locally
+
+```bash
+node 008_Builds/artifacts/2026-08-11-moto-log/tools/serve.cjs   # from the repo root
+```
+
+Then open <http://localhost:4173/moto/>. localhost counts as a secure context, so the
+service worker registers exactly as it does on Netlify — stop the server and reload to
+confirm offline still works.
 
 ## Design
 
