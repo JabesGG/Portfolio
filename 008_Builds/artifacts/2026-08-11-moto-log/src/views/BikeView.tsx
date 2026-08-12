@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/lib/ctx";
 import { Panel } from "@/components/Lamp";
 import { statusOf, dateStatus, csv } from "@/lib/calc";
-import { addMonths, dmy, num, todayISO } from "@/lib/format";
+import { addMonths, agoLabel, backupIsStale, dmy, num, todayISO } from "@/lib/format";
 import { seed, uid, KEY } from "@/lib/store";
+import { durability, type Durability } from "@/lib/storage";
 import type { State } from "@/lib/types";
 
 /* Drafts hold raw strings so half-typed numbers don't get coerced mid-keystroke.
@@ -42,6 +43,14 @@ export function BikeView() {
   const { s, update, replace, toast } = useApp();
   const [d, setD] = useState(() => toDrafts(s));
   const fileRef = useRef<HTMLInputElement>(null);
+  const [durable, setDurable] = useState<Durability>("unknown");
+
+  useEffect(() => { durability().then(setDurable); }, []);
+
+  /** Records that a copy left the device, so the reminder can reset. */
+  function markBackedUp() {
+    update(st => { st.lastBackup = todayISO(); });
+  }
 
   // Import and erase reset the drafts themselves, so no resync effect is needed
   // here — one would only clobber in-progress typing.
@@ -252,13 +261,24 @@ export function BikeView() {
       </Panel>
 
       <Panel title="Your data" note={`${s.entries.length} entries`}>
+        <p className={`backup ${backupIsStale(s.lastBackup, s.entries.length > 0) ? "backup--stale" : ""}`}>
+          <span className="backup__bulb" />
+          <span>
+            {agoLabel(s.lastBackup)}
+            {durable === "persistent" && " · storage marked persistent"}
+            {durable === "best-effort" && " · storage is best-effort"}
+          </span>
+        </p>
         <p className="field__h !mt-0 mb-3">
-          Everything lives in this browser only. Back it up before you clear your browsing data or
+          Everything lives on this device only. Back it up before you clear your browsing data or
           switch phones.
         </p>
         <div className="grid grid-cols-2 gap-2 mb-2">
           <button className="btn btn--ghost btn--sm"
-                  onClick={() => download(`moto-log-${todayISO()}.json`, JSON.stringify(s, null, 2), "application/json")}>
+                  onClick={() => {
+                    download(`moto-log-${todayISO()}.json`, JSON.stringify(s, null, 2), "application/json");
+                    markBackedUp();
+                  }}>
             Download backup
           </button>
           <button className="btn btn--ghost btn--sm"
@@ -269,8 +289,9 @@ export function BikeView() {
         <div className="grid grid-cols-2 gap-2 mb-2">
           <button className="btn btn--ghost btn--sm"
                   onClick={() => {
+                    // Only counts as a backup once the copy actually succeeded.
                     navigator.clipboard?.writeText(JSON.stringify(s)).then(
-                      () => toast("Backup copied. Paste it somewhere safe."),
+                      () => { markBackedUp(); toast("Backup copied. Paste it somewhere safe."); },
                       () => toast("Clipboard blocked — use Download backup."),
                     ) ?? toast("Clipboard unavailable — use Download backup.");
                   }}>

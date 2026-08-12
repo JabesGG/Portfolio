@@ -56,6 +56,35 @@ export async function load(): Promise<State> {
   return seed();
 }
 
+export type Durability = "native" | "persistent" | "best-effort" | "unknown";
+
+/**
+ * Asks the browser to mark this origin's storage as persistent, which takes it
+ * out of the pool the browser is free to evict when space runs short. Chrome
+ * grants it silently for installed apps; Safari does not implement it at all,
+ * hence the guards. Safe to call on every start — it is a no-op once granted.
+ */
+export async function requestPersistence(): Promise<Durability> {
+  if (backend) return "native"; // the native key store is already durable
+  try {
+    if (!navigator.storage?.persist) return "unknown";
+    if (await navigator.storage.persisted()) return "persistent";
+    return (await navigator.storage.persist()) ? "persistent" : "best-effort";
+  } catch {
+    return "unknown";
+  }
+}
+
+export async function durability(): Promise<Durability> {
+  if (backend) return "native";
+  try {
+    if (!navigator.storage?.persisted) return "unknown";
+    return (await navigator.storage.persisted()) ? "persistent" : "best-effort";
+  } catch {
+    return "unknown";
+  }
+}
+
 /**
  * Resolves false if the write failed, so the caller can say so rather than
  * silently losing an entry.

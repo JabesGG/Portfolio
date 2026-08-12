@@ -70,3 +70,26 @@ export function addMonths(iso: string, m: number): string {
 export function plural(v: number, word: string): string {
   return `${v} ${word}${Math.abs(v) === 1 ? "" : "s"}`;
 }
+
+/** How long ago a date was, in the roundest useful unit. */
+export function agoLabel(iso?: string): string {
+  if (!iso) return "Never backed up";
+  const left = daysUntil(iso);
+  if (left == null) return "Never backed up";
+  const days = -left;
+  if (days <= 0) return "Backed up today";
+  if (days === 1) return "Backed up yesterday";
+  if (days < 31) return `Backed up ${days} days ago`;
+  const months = Math.round(days / 30.44);
+  if (months < 12) return `Backed up ${plural(months, "month")} ago`;
+  const years = Math.floor(months / 12);
+  return `Backed up over ${plural(years, "year")} ago`;
+}
+
+/** True once a backup is old enough to be worth mentioning. */
+export function backupIsStale(iso: string | undefined, hasEntries: boolean): boolean {
+  if (!hasEntries) return false;
+  if (!iso) return true;
+  const left = daysUntil(iso);
+  return left == null || -left > 90;
+}

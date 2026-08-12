@@ -1,6 +1,6 @@
 import { statusOf, dateStatus, fuelRuns, totals, monthlySpend, entriesSorted } from "./src/lib/calc";
 import { dueNotifications } from "./src/lib/reminders";
-import { addMonths, dmy, money, km } from "./src/lib/format";
+import { addMonths, agoLabel, backupIsStale, dmy, money, km } from "./src/lib/format";
 import type { State } from "./src/lib/types";
 
 const S: State = {
@@ -126,6 +126,30 @@ check("road tax warning is 30 days before 5 Sep", rt.at.toISOString().slice(0, 1
 // Nothing in the past should ever be scheduled.
 const late = dueNotifications(S, new Date(2030, 0, 1));
 check("no reminders scheduled once everything is in the past", late.length, 0);
+
+console.log("\n-- backup reminder --");
+// agoLabel reads the real clock, so build the fixtures relative to today.
+const daysAgo = (n: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const m = d.getMonth() + 1, day = d.getDate();
+  return `${d.getFullYear()}-${m < 10 ? "0" : ""}${m}-${day < 10 ? "0" : ""}${day}`;
+};
+
+check("never backed up", agoLabel(undefined), "Never backed up");
+check("today", agoLabel(daysAgo(0)), "Backed up today");
+check("yesterday", agoLabel(daysAgo(1)), "Backed up yesterday");
+check("10 days", agoLabel(daysAgo(10)), "Backed up 10 days ago");
+check("30 days stays in days", agoLabel(daysAgo(30)), "Backed up 30 days ago");
+check("31 days rolls to months", agoLabel(daysAgo(31)), "Backed up 1 month ago");
+check("200 days", agoLabel(daysAgo(200)), "Backed up 7 months ago");
+check("400 days", agoLabel(daysAgo(400)), "Backed up over 1 year ago");
+
+check("empty book is never stale", backupIsStale(undefined, false), false);
+check("entries but no backup is stale", backupIsStale(undefined, true), true);
+check("backed up today is not stale", backupIsStale(daysAgo(0), true), false);
+check("90 days is not yet stale", backupIsStale(daysAgo(90), true), false);
+check("91 days is stale", backupIsStale(daysAgo(91), true), true);
 
 console.log("\n" + (fails ? `FAILED: ${fails}` : "All checks passed") + "\n");
 process.exit(fails ? 1 : 0);

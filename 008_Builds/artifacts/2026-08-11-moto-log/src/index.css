@@ -424,6 +424,24 @@
     font-family: var(--display); font-variation-settings: 'wdth' 87;
     text-transform: uppercase; letter-spacing: .08em; font-size: 13px; font-weight: 600;
   }
+
+  /* Backup age reads as one more tell-tale: dark when there is nothing to say,
+     amber once a backup is old enough to matter. Same vocabulary as the dash. */
+  .backup {
+    display: flex; align-items: center; gap: 9px;
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-3);
+    padding: 9px 11px; margin-bottom: 12px;
+    border: 1px solid var(--rule-2); border-radius: 3px; background: var(--stock);
+  }
+  .backup__bulb {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: var(--ink-3);
+  }
+  .backup--stale { color: var(--ink-2); border-color: color-mix(in srgb, var(--lamp-amber) 45%, transparent); }
+  .backup--stale .backup__bulb {
+    background: var(--lamp-amber);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lamp-amber) 20%, transparent);
+  }
   .colophon {
     padding-top: 14px; border-top: 1px solid var(--rule-2);
     font-family: var(--mono); font-size: 11px; color: var(--ink-3);

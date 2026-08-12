@@ -32,7 +32,7 @@ straight into that form.
 | `tools/make-icons.cjs` | Renders the app icons as PNGs with no image dependencies (raw pixels + zlib). The mark is a seven-segment odometer readout. |
 | `tools/make-sw.cjs` | Writes `sw.js` **after** the build, once asset hashes are known. |
 | `tools/serve.cjs` | Serves `public/moto` locally under the *real* CSP, read out of `public/_headers`. |
-| `verify.ts` | 44 assertions over the calculations and reminder scheduling. |
+| `verify.ts` | 57 assertions over the calculations, reminder scheduling and backup age. |
 | `bundle.html` / `artifact.html` | Single-file builds. `artifact.html` is `bundle.html` with the outer `<!DOCTYPE>/<html>/<body>` stripped, because the artifact host supplies its own skeleton. |
 
 ## Run it locally
@@ -164,6 +164,13 @@ an entry. Registration is kept out of the bundler's dependency graph
 (`new URL('sw.js', document.baseURI)`), since Parcel would otherwise try to bundle it itself.
 
 ## Data
+
+On startup the app calls `navigator.storage.persist()`, which asks the browser to exempt this
+origin from eviction under storage pressure. Chrome grants it silently for installed apps and
+declines for a casual tab; Safari does not implement it. The Bike tab reports which state you
+are actually in rather than assuming, alongside how long ago you last exported — that reminder
+turns amber past 90 days, or immediately if there are entries and no backup at all. A CSV
+export deliberately does **not** count as a backup, since it cannot be restored from.
 
 Stored under `motolog.v1` — `localStorage` on the web, native Preferences in the app shell.
 **Per browser and per origin**: the installed PWA, the hosted claude.ai artifact and a local

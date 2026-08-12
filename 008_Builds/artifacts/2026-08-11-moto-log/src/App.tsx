@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { AppCtx, type Api, type Tab, type SheetKind } from "@/lib/ctx";
 import { THEME_KEY } from "@/lib/store";
-import { load, loadSync, save } from "@/lib/storage";
+import { load, loadSync, save, requestPersistence } from "@/lib/storage";
 import { syncReminders } from "@/lib/reminders";
 import type { State, Entry, FuelEntry, ServiceEntry, ExpenseEntry } from "@/lib/types";
 import { Dash } from "@/views/Dash";
@@ -74,6 +74,10 @@ function Book({ initial }: { initial: State }) {
 
   // Rescheduled from scratch whenever the book changes. No-op on the web.
   useEffect(() => { void syncReminders(s); }, [s]);
+
+  // Ask once per launch to have this data exempted from eviction. Silent either
+  // way — it can only improve on the default, and nothing depends on it.
+  useEffect(() => { void requestPersistence(); }, []);
 
   // Home-screen shortcuts land on ?add=fuel etc. Open that sheet, then drop the
   // query so a refresh doesn't reopen it.

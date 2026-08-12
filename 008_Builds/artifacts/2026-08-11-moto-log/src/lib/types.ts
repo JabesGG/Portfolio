@@ -33,6 +33,8 @@ export interface KeyDate {
 
 export interface State {
   v: number; bike: Bike; schedule: SchedItem[]; dates: KeyDate[]; entries: Entry[];
+  /** ISO date of the last export. Drives the backup reminder on the Bike tab. */
+  lastBackup?: string;
 }
 
 export type Level = "red" | "amber" | "green" | "unset";
