@@ -1,2 +1,7 @@
 User-agent: *
 Allow: /
+
+# Moto Log is a personal tool that ships with the site but is not part of it.
+# It holds no data of its own — everything stays in the browser — but there is
+# no reason for it to turn up in search results.
+Disallow: /moto/
