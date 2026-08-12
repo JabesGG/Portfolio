@@ -1,0 +1,22 @@
+{
+  "name": "Moto Log",
+  "short_name": "Moto Log",
+  "description": "Motorcycle service intervals, renewal dates and running costs.",
+  "id": "/moto/",
+  "start_url": "/moto/",
+  "scope": "/moto/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#15181B",
+  "theme_color": "#15181B",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Log fuel", "short_name": "Fuel", "url": "/moto/?add=fuel" },
+    { "name": "Log service", "short_name": "Service", "url": "/moto/?add=service" }
+  ]
+}

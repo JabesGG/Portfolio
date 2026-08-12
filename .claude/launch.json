@@ -6,6 +6,15 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 4321
+    },
+    {
+      "name": "moto-pwa",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "C:/Users/moder/AppData/Local/Temp/claude/G--My-Drive-NYP-Y2S1-Resume-jabez-portfolio-astro-portfolio/24bca16c-b9dd-44a3-b276-3cba8c67e395/scratchpad/serve-moto.cjs"
+      ],
+      "port": 4173,
+      "url": "http://localhost:4173"
     }
   ]
 }
