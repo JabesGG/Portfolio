@@ -17,7 +17,7 @@ const arcaneUrl = arcane?.link ?? "https://www.arcanevault.app/";
 const projectCount = String(projects.length).padStart(2, "0");
 
 // Flagship leads. Explicit order for the work section.
-const workOrder = ["arcanevault", "market-potential", "genquest"];
+const workOrder = ["arcanevault", "moto-log", "market-potential", "genquest"];
 const orderedProjects = workOrder
   .map((s) => projects.find((p) => p.slug === s))
   .filter(Boolean);
@@ -67,7 +67,10 @@ const orderedProjects = workOrder
         <div class="features">
           {
             orderedProjects.map((p) => {
+              // `flagship` is purely visual weight; `caseStudy` decides whether the
+              // card links out to its own page or expands in place.
               const flagship = p.slug === "arcanevault";
+              const hasCase = Boolean(p.caseStudy);
               return (
                 <article class:list={["feature", { flagship }]}>
                   <div class="shot">
@@ -77,7 +80,7 @@ const orderedProjects = workOrder
                     <p class="feat-num" />
                     <div class="feat-top">
                       <h3 class="feat-title">{p.title}</h3>
-                      {flagship && <span class="badge-live">LIVE</span>}
+                      {p.link && <span class="badge-live">LIVE</span>}
                     </div>
                     <p class="feat-tagline">{p.tagline}</p>
                     <p class="feat-blurb">{p.detail}</p>
@@ -87,8 +90,8 @@ const orderedProjects = workOrder
                       ))}
                     </div>
                     <div class="feat-links">
-                      {flagship && (
-                        <a class="link-cs" href="/arcanevault">
+                      {hasCase && (
+                        <a class="link-cs" href={`/${p.slug}`}>
                           Case study &rarr;
                         </a>
                       )}
@@ -100,7 +103,7 @@ const orderedProjects = workOrder
                     </div>
 
                     {
-                      !flagship && (p.more || p.gallery) && (
+                      !hasCase && (p.more || p.gallery) && (
                         <details class="more">
                           <summary>
                             <span class="more-open">More on this project</span>

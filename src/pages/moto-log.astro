@@ -1,0 +1,315 @@
+---
+import Base from "../layouts/Base.astro";
+import { projects, profile } from "../data/portfolio.js";
+
+const p = projects.find((x) => x.slug === "moto-log");
+const title = `${p.title} — Case study — ${profile.shortName}`;
+const description = p.tagline;
+const domain = (p.link ?? "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+// The worked example the tell-tales on the cover are read from, so the page and
+// the picture agree. Odometer 28,476 km, read on 11 Aug 2026.
+const clocks = [
+  {
+    item: "Engine oil",
+    interval: "3,000 km · 6 months",
+    distance: "724 km left",
+    time: "126 days left",
+    wins: "distance",
+    says: "in 724 km",
+  },
+  {
+    item: "Chain clean & lube",
+    interval: "500 km · 1 month",
+    distance: "76 km over",
+    time: "9 days left",
+    wins: "distance",
+    says: "76 km over",
+  },
+  {
+    item: "Brake fluid",
+    interval: "— · 24 months",
+    distance: "no distance interval",
+    time: "395 days left",
+    wins: "time",
+    says: "in 395 days",
+  },
+];
+---
+
+<Base title={title} description={description}>
+  <a class="cs-back" href="/">&larr; Back to work</a>
+
+  <article>
+    <header class="cs-hero">
+      <p class="eyebrow rise rise-1">Case study · {p.year}</p>
+      <h1 class="cs-title rise rise-2">{p.title}</h1>
+      <p class="cs-lede rise rise-3">{p.tagline}</p>
+
+      {
+        p.link && (
+          <div class="feat-links rise rise-3" style="margin-top: 1.4rem;">
+            <span class="badge-live">LIVE</span>
+            <a class="link-ext" href={p.link} rel="noopener noreferrer" target="_blank">
+              {domain} &nearr;
+            </a>
+          </div>
+        )
+      }
+
+      <div class="cs-cover rise rise-4">
+        <img
+          src={p.image}
+          alt="The Moto Log dashboard: an odometer reading 028476 km beside three tell-tales — chain lube overdue, road tax due in 24 days, engine oil in range."
+          width="1200"
+          height="750"
+        />
+      </div>
+    </header>
+
+    <dl class="cs-meta">
+      <div>
+        <dt>My role</dt>
+        <dd>{p.role}</dd>
+      </div>
+      <div>
+        <dt>Stack</dt>
+        <dd>{p.tags.join(" · ")}</dd>
+      </div>
+      <div>
+        <dt>Year</dt>
+        <dd>{p.year}</dd>
+      </div>
+      {
+        p.link && (
+          <div>
+            <dt>Live app</dt>
+            <dd>
+              <a href={p.link} rel="noopener noreferrer" target="_blank">{domain}</a>
+            </dd>
+          </div>
+        )
+      }
+    </dl>
+
+    <section class="cs-section">
+      <p class="seclabel"><span class="dot"></span>Overview</p>
+      <p class="cs-body">{p.more}</p>
+    </section>
+
+    <section class="cs-section">
+      <p class="seclabel"><span class="dot"></span>Two clocks, one answer</p>
+      <p class="cs-body">
+        A service interval is not one number. Oil ages whether you ride or not, and a chain wears
+        only when you do — so each item carries a distance interval, a time interval, or both.
+        When it carries both, the app runs them side by side and reports whichever runs out first.
+        Everything below is one bike at 28,476 km, read on 11 August 2026.
+      </p>
+
+      <div class="clocks">
+        <table>
+          <caption class="sr-only">
+            How each service item's distance and time intervals compare, and which one decides
+            what the app reports.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Item</th>
+              <th scope="col">Every</th>
+              <th scope="col">On distance</th>
+              <th scope="col">On time</th>
+              <th scope="col">What it says</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              clocks.map((c) => (
+                <tr>
+                  <th scope="row">{c.item}</th>
+                  <td class="num">{c.interval}</td>
+                  <td class:list={["num", c.wins === "distance" ? "win" : "lost"]}>{c.distance}</td>
+                  <td class:list={["num", c.wins === "time" ? "win" : "lost"]}>{c.time}</td>
+                  <td class="num says">{c.says}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="clocks-note">
+        The winning clock is the one in emerald. Logging a service and ticking an item restarts
+        both of its clocks from that date and reading, which is why the app asks what was done
+        rather than just what it cost.
+      </p>
+    </section>
+
+    <section class="cs-section">
+      <p class="seclabel"><span class="dot"></span>Three constraints</p>
+      <div class="focus">
+        <div class="focus-item">
+          <h3 class="focus-label">It must not lose data</h3>
+          <p class="focus-body">
+            There is no account and no server, so the browser holds the only copy. That makes
+            export a feature rather than an afterthought: JSON for restoring, CSV for anything
+            else. The native build swaps browser storage for the platform's own key store, because
+            iOS is free to evict a web app's storage when space runs short — an acceptable
+            trade for a cache, not for a service history.
+          </p>
+        </div>
+        <div class="focus-item">
+          <h3 class="focus-label">It must not need a signal</h3>
+          <p class="focus-body">
+            Fuel gets logged standing at the pump, which is exactly where reception is worst. A
+            service worker pre-caches the whole app at install, so it opens and records entries
+            with the network off entirely. I verified that by stopping the server and reloading,
+            rather than trusting that it would.
+          </p>
+        </div>
+        <div class="focus-item">
+          <h3 class="focus-label">It must not ship inline script</h3>
+          <p class="focus-body">
+            This site sends <span class="mono-inline">script-src 'self'</span> with no
+            <span class="mono-inline">'unsafe-inline'</span>, and the app is served from it. That
+            ruled out the single-file bundle I started with, and later caught a bundler-generated
+            import map that would have failed silently. The policy was worth keeping; the build
+            changed to suit it.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cs-section">
+      <p class="seclabel"><span class="dot"></span>Proving it</p>
+      <p class="cs-body">
+        The parts worth getting right are arithmetic, so they are written as pure functions with
+        no interface attached and checked by 44 assertions against a worked example: full-to-full
+        fuel economy, which of the two clocks wins, month-end date handling, and what the tell-tales
+        should read. One of those assertions caught my own arithmetic rather than the code's, which
+        is the point of writing them down.
+      </p>
+    </section>
+
+    {
+      p.gallery?.length > 0 && (
+        <section class="cs-section">
+          <p class="seclabel"><span class="dot"></span>Inside the build</p>
+          <div class="cs-gallery">
+            {p.gallery.map((g) => (
+              <figure class="cs-figure">
+                <img src={g.src} alt={`${p.title} — ${g.caption}`} loading="lazy" />
+                <figcaption>{g.caption}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <a class="cs-back" href="/">&larr; Back to work</a>
+  </article>
+</Base>
+
+<style>
+  /* Scoped to this page. Astro extracts it to an external stylesheet, which keeps
+     it inside the site's strict style-src. */
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* Wide content scrolls inside its own container so the page never does. */
+  .clocks {
+    margin-top: 1.75rem;
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+
+  .clocks table {
+    width: 100%;
+    min-width: 44rem;
+    border-collapse: collapse;
+  }
+
+  .clocks th,
+  .clocks td {
+    text-align: left;
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .clocks tbody tr:last-child th,
+  .clocks tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .clocks thead th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    background: #f8fafc;
+  }
+
+  .clocks tbody th {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 0.98rem;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .clocks .num {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--ink-soft);
+  }
+
+  /* The whole point of the table: which clock actually decided. */
+  .clocks .win {
+    color: var(--accent-deep);
+    font-weight: 700;
+  }
+  .clocks .lost {
+    color: var(--ink-faint);
+    text-decoration: line-through;
+    text-decoration-color: var(--rule-strong);
+    text-decoration-thickness: 1px;
+  }
+  .clocks .says {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .clocks-note {
+    margin-top: 1rem;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 62ch;
+  }
+
+  .mono-inline {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: #eef3f8;
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: 0.1em 0.35em;
+    white-space: nowrap;
+  }
+
+  .cs-section .focus {
+    margin-top: 0.5rem;
+  }
+</style>

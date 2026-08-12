@@ -83,7 +83,24 @@ export const skills = [
 
 // Each project needs a real cover image at /projects/<image>.
 // Delete the ones you are not using — the grid adapts.
+// Set caseStudy: true when a /<slug> page exists; the grid links to it instead
+// of showing the inline expander.
 export const projects = [
+  {
+    slug: "moto-log",
+    title: "Moto Log",
+    tagline: "A service and running-cost logbook that works with no signal",
+    year: "2026",
+    tags: ["Web Development", "TypeScript", "React", "Offline PWA"],
+    image: "/projects/moto-log.svg",
+    caseStudy: true,
+    role: "Built it end to end — interface, domain logic, offline delivery and native packaging.",
+    detail:
+      "An installable app that tracks service intervals, renewal dates and cost per kilometre, and keeps working at the pump with no signal.",
+    more:
+      "Moto Log is a maintenance record that behaves like an instrument rather than a spreadsheet. The odometer is the primary control: every interval and every cost-per-kilometre figure derives from it, and the dashboard shows only the tell-tales that are actually lit, so the screen is never a wall of green ticks. Intervals run on two clocks at once — distance and time — and whichever expires first is the one that speaks, so brake fluid nags on months while the chain nags on kilometres. Fuel economy is measured full tank to full tank, with part-fills accumulated into the next full tank rather than each producing a figure that looks precise and is wrong. It is a small app with an unusually strict brief: it holds a maintenance record, so it must not lose data, and it is used standing at a petrol station, so it must not need a connection.",
+    link: "https://jabezgoh.netlify.app/moto/",
+  },
   {
     slug: "genquest",
     title: "GenQuest",
@@ -152,6 +169,7 @@ export const projects = [
     year: "2026",
     tags: ["Web Development", "C#", "ASP.NET Core"],
     image: "/projects/arcanevault.png",
+    caseStudy: true,
     // TODO (Jabez): confirm scope — solo or team.
     role: "Built the catalogue, marketplace, trades and the analytics dashboard.",
     detail:

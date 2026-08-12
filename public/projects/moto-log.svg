@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img"
+     aria-label="Moto Log dashboard: an odometer reading 028476 km beside three tell-tale lamps — chain lube overdue, road tax due soon, engine oil in range.">
+  <title>Moto Log — odometer and tell-tales</title>
+
+  <defs>
+    <!-- Cylinder shading, so each barrel reads as a turned drum rather than a flat box. -->
+    <linearGradient id="barrel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#000000"/>
+      <stop offset="22%"  stop-color="#1e2225"/>
+      <stop offset="50%"  stop-color="#33393d"/>
+      <stop offset="78%"  stop-color="#1e2225"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+    <clipPath id="housing">
+      <rect x="64" y="352" width="452" height="120" rx="8"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1200" height="750" fill="#141719"/>
+
+  <!-- ── Left: the machine ───────────────────────────────────── -->
+  <text x="64" y="118" fill="#6C7479"
+        font-family="ui-monospace, 'Cascadia Mono', Consolas, monospace"
+        font-size="20" letter-spacing="4.5">SERVICE &amp; RUNNING LOG</text>
+
+  <text x="64" y="212" fill="#E7E8E3"
+        font-family="'Space Grotesk', 'Segoe UI', system-ui, sans-serif"
+        font-size="86" font-weight="700" letter-spacing="-2">Moto Log</text>
+
+  <text x="64" y="272" fill="#9BA2A7"
+        font-family="'Inter', 'Segoe UI', system-ui, sans-serif"
+        font-size="26">Every interval counts from this number.</text>
+
+  <!-- odometer housing -->
+  <rect x="64" y="352" width="452" height="120" rx="8" fill="#0A0C0D" stroke="#2A2F33" stroke-width="2"/>
+  <g clip-path="url(#housing)">
+    <g font-family="ui-monospace, 'Cascadia Mono', Consolas, monospace"
+       font-size="66" font-weight="600" fill="#F2EFE8" text-anchor="middle">
+      <rect x="76"  y="364" width="68" height="96" rx="3" fill="url(#barrel)"/>
+      <text x="110" y="434">0</text>
+      <rect x="148" y="364" width="68" height="96" rx="3" fill="url(#barrel)"/>
+      <text x="182" y="434">2</text>
+      <rect x="220" y="364" width="68" height="96" rx="3" fill="url(#barrel)"/>
+      <text x="254" y="434">8</text>
+      <rect x="292" y="364" width="68" height="96" rx="3" fill="url(#barrel)"/>
+      <text x="326" y="434">4</text>
+      <rect x="364" y="364" width="68" height="96" rx="3" fill="url(#barrel)"/>
+      <text x="398" y="434">7</text>
+      <rect x="436" y="364" width="68" height="96" rx="3" fill="url(#barrel)"/>
+      <text x="470" y="434">6</text>
+    </g>
+  </g>
+  <text x="532" y="458" fill="#6C7479"
+        font-family="ui-monospace, 'Cascadia Mono', Consolas, monospace"
+        font-size="24" letter-spacing="4">KM</text>
+
+  <!-- running-cost strip -->
+  <line x1="64" y1="540" x2="516" y2="540" stroke="#333A3E" stroke-width="2"/>
+  <g font-family="ui-monospace, 'Cascadia Mono', Consolas, monospace">
+    <text x="64"  y="596" fill="#E7E8E3" font-size="34" font-weight="600">$0.099</text>
+    <text x="64"  y="626" fill="#6C7479" font-size="17" letter-spacing="2.5">PER KM</text>
+    <text x="244" y="596" fill="#E7E8E3" font-size="34" font-weight="600">30.8</text>
+    <text x="244" y="626" fill="#6C7479" font-size="17" letter-spacing="2.5">KM / LITRE</text>
+    <text x="404" y="596" fill="#E7E8E3" font-size="34" font-weight="600">7,476</text>
+    <text x="404" y="626" fill="#6C7479" font-size="17" letter-spacing="2.5">KM TRACKED</text>
+  </g>
+
+  <!-- ── Right: the tell-tales ───────────────────────────────── -->
+  <text x="700" y="118" fill="#6C7479"
+        font-family="ui-monospace, 'Cascadia Mono', Consolas, monospace"
+        font-size="20" letter-spacing="4.5">TELL-TALES</text>
+
+  <!-- Only lit lamps appear: that is the whole idea, so the cover shows it. -->
+  <g font-family="'Space Grotesk', 'Segoe UI', system-ui, sans-serif">
+    <!-- overdue -->
+    <circle cx="712" cy="196" r="11" fill="#E85A4C"/>
+    <circle cx="712" cy="196" r="19" fill="#E85A4C" opacity="0.18"/>
+    <text x="748" y="190" fill="#E7E8E3" font-size="26" font-weight="600" letter-spacing="1">Chain clean &amp; lube</text>
+    <text x="748" y="222" fill="#6C7479" font-size="19"
+          font-family="ui-monospace, Consolas, monospace">Last 20 Jul · 27,900 km</text>
+    <text x="1136" y="190" fill="#E85A4C" font-size="21" font-weight="600" text-anchor="end"
+          font-family="ui-monospace, Consolas, monospace">76 km over</text>
+    <line x1="700" y1="256" x2="1136" y2="256" stroke="#2A3033" stroke-width="1.5"/>
+
+    <!-- due soon -->
+    <circle cx="712" cy="326" r="11" fill="#E0A032"/>
+    <circle cx="712" cy="326" r="19" fill="#E0A032" opacity="0.18"/>
+    <text x="748" y="320" fill="#E7E8E3" font-size="26" font-weight="600" letter-spacing="1">Road tax</text>
+    <text x="748" y="352" fill="#6C7479" font-size="19"
+          font-family="ui-monospace, Consolas, monospace">Expires 5 Sep 2026</text>
+    <text x="1136" y="320" fill="#E0A032" font-size="21" font-weight="600" text-anchor="end"
+          font-family="ui-monospace, Consolas, monospace">in 24 days</text>
+    <line x1="700" y1="386" x2="1136" y2="386" stroke="#2A3033" stroke-width="1.5"/>
+
+    <!-- in range -->
+    <circle cx="712" cy="456" r="11" fill="#4FA97A"/>
+    <circle cx="712" cy="456" r="19" fill="#4FA97A" opacity="0.18"/>
+    <text x="748" y="450" fill="#E7E8E3" font-size="26" font-weight="600" letter-spacing="1">Engine oil</text>
+    <text x="748" y="482" fill="#6C7479" font-size="19"
+          font-family="ui-monospace, Consolas, monospace">Last 15 Jun · 26,200 km</text>
+    <text x="1136" y="450" fill="#4FA97A" font-size="21" font-weight="600" text-anchor="end"
+          font-family="ui-monospace, Consolas, monospace">in 724 km</text>
+  </g>
+
+  <text x="700" y="596" fill="#6C7479"
+        font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="19">
+    Distance or time — whichever runs out first.
+  </text>
+  <text x="700" y="626" fill="#6C7479"
+        font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="19">
+    Lamps that are not lit do not show.
+  </text>
+</svg>
