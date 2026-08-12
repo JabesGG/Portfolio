@@ -48,7 +48,7 @@ const clocks = [
 
       {
         p.link && (
-          <div class="feat-links rise rise-3" style="margin-top: 1.4rem;">
+          <div class="feat-links rise rise-3">
             <span class="badge-live">LIVE</span>
             <a class="link-ext" href={p.link} rel="noopener noreferrer" target="_blank">
               {domain} &nearr;
@@ -256,7 +256,7 @@ const clocks = [
     text-transform: uppercase;
     color: var(--ink-faint);
     font-weight: 400;
-    background: #f8fafc;
+    background: var(--bg);
   }
 
   .clocks tbody th {
@@ -302,9 +302,9 @@ const clocks = [
   .mono-inline {
     font-family: var(--mono);
     font-size: 0.86em;
-    background: #eef3f8;
+    background: var(--bg);
     border: 1px solid var(--rule);
-    border-radius: 5px;
+    border-radius: 2px;
     padding: 0.1em 0.35em;
     white-space: nowrap;
   }

@@ -14,9 +14,8 @@ const description = profile.statement;
 
 const arcane = projects.find((p) => p.slug === "arcanevault");
 const arcaneUrl = arcane?.link ?? "https://www.arcanevault.app/";
-const projectCount = String(projects.length).padStart(2, "0");
 
-// Flagship leads. Explicit order for the work section.
+// Explicit order for the work section — the argument, strongest first.
 const workOrder = ["arcanevault", "moto-log", "market-potential", "genquest"];
 const orderedProjects = workOrder
   .map((s) => projects.find((p) => p.slug === s))
@@ -24,216 +23,239 @@ const orderedProjects = workOrder
 ---
 
 <Base title={title} description={description}>
-    <!-- ══ Nav ═════════════════════════════════════════════ -->
-    <nav class="nav">
-      <a class="nav-brand" href="#main">{profile.shortName}</a>
-      <div class="nav-links">
-        <a class="hide-sm" href="#work">Work</a>
-        <a class="hide-sm" href="#about">About</a>
-        <a href="#contact">Contact</a>
-        <a class="ext" href={arcaneUrl} rel="noopener noreferrer" target="_blank">arcanevault.app &nearr;</a>
-      </div>
-    </nav>
+  <!-- ══ Masthead ════════════════════════════════════════════ -->
+  <nav class="nav">
+    <a class="nav-brand" href="#main">{profile.shortName}</a>
+    <div class="nav-links">
+      <a class="hide-sm" href="#work">Work</a>
+      <a class="hide-sm" href="#about">About</a>
+      <a href="#contact">Contact</a>
+      <a class="ext" href={arcaneUrl} rel="noopener noreferrer" target="_blank">arcanevault.app &nearr;</a>
+    </div>
+  </nav>
 
-    <main id="main">
-      <!-- ══ Hero ══════════════════════════════════════════ -->
-      <header class="section hero">
-        <div class="hero-text">
-          <p class="eyebrow rise rise-1">{profile.role} · {profile.location}</p>
-          <h1 class="hero-name rise rise-2">{profile.shortName}</h1>
-          <p class="hero-statement rise rise-3">{profile.statement}</p>
-          <div class="cta rise rise-3">
-            <a class="btn solid" href="#work">View work</a>
-            <a class="btn ghost" href={arcaneUrl} rel="noopener noreferrer" target="_blank">
-              arcanevault.app &nearr;
-            </a>
-          </div>
-          <div class="stats rise rise-4">
-            <div class="stat"><b>{projectCount}</b><span>Projects shipped</span></div>
-            <div class="stat"><b>2025–28</b><span>BFT · Nanyang Poly</span></div>
-            <div class="stat"><b>Jan 2027</b><span>Open to internships</span></div>
-          </div>
+  <main id="main">
+    <!-- ══ Hero — the claim, then who signs it ═══════════════ -->
+    <header class="hero">
+      <div class="hero-text">
+        <p class="eyebrow rise rise-1">{profile.role} · {profile.location}</p>
+        <h1 class="hero-name rise rise-2">
+          Business questions, turned into <em>decisions you can act on</em>.
+        </h1>
+        <p class="hero-statement rise rise-3">
+          I build the web apps, data models and dashboards behind that sentence — currently
+          studying Business &amp; Financial Technology at Nanyang Polytechnic, after electronics
+          engineering at ITE. The habit that came with me from electronics is the useful one:
+          trace a fault through a system rather than guess at it.
+        </p>
+        <p class="hero-sig rise rise-3">
+          <b>{profile.name}</b>
+          <span class="sep">/</span>
+          <span>{profile.location}</span>
+          <span class="sep">/</span>
+          <span>{profile.availability}</span>
+        </p>
+        <div class="cta rise rise-4">
+          <a class="btn solid" href="#work">See the work</a>
+          <a class="btn ghost" href={profile.resumeFile}>Résumé (PDF)</a>
         </div>
-        <figure class="hero-portrait rise rise-3">
-          <img src="/me.jpg" alt={profile.name} width="640" height="800" />
-        </figure>
-      </header>
+      </div>
 
-      <!-- ══ Selected work (leads) ═════════════════════════ -->
-      <section class="section" id="work">
-        <p class="seclabel"><span class="dot"></span><span class="idx">01</span> · Selected work</p>
-        <h2 class="h2">Things I have built</h2>
+      <figure class="hero-portrait rise rise-3">
+        <img src="/me.jpg" alt={profile.name} width="640" height="800" />
+        <figcaption>{profile.shortName}</figcaption>
+      </figure>
+    </header>
 
-        <div class="features">
-          {
-            orderedProjects.map((p) => {
-              // `flagship` is purely visual weight; `caseStudy` decides whether the
-              // card links out to its own page or expands in place.
-              const flagship = p.slug === "arcanevault";
-              const hasCase = Boolean(p.caseStudy);
-              return (
-                <article class:list={["feature", { flagship }]}>
-                  <div class="shot">
-                    <img src={p.image} alt={`${p.title} screenshot`} loading="lazy" />
+    <!-- ══ Work ═════════════════════════════════════════════ -->
+    <section class="section" id="work">
+      <p class="seclabel"><span class="dot"></span>Selected work</p>
+      <h2 class="h2">Four things I have built</h2>
+
+      <div class="features">
+        {
+          orderedProjects.map((p) => {
+            // `flagship` is purely visual weight; `caseStudy` decides whether the
+            // card links out to its own page or expands in place.
+            const flagship = p.slug === "arcanevault";
+            const hasCase = Boolean(p.caseStudy);
+            return (
+              <article class:list={["feature", { flagship }]}>
+                <p class="feat-num" />
+
+                <div class="feat-body">
+                  <div class="feat-top">
+                    <h3 class="feat-title">{p.title}</h3>
+                    {p.link && <span class="badge-live">Live</span>}
                   </div>
-                  <div class="feat-body">
-                    <p class="feat-num" />
-                    <div class="feat-top">
-                      <h3 class="feat-title">{p.title}</h3>
-                      {p.link && <span class="badge-live">LIVE</span>}
-                    </div>
-                    <p class="feat-tagline">{p.tagline}</p>
-                    <p class="feat-blurb">{p.detail}</p>
-                    <div class="chips">
-                      {p.tags.map((t) => (
-                        <span class="chip">{t}</span>
+                  <p class="feat-tagline">{p.tagline}</p>
+
+                  {p.readings && (
+                    <div class="readout">
+                      {p.readings.map((r) => (
+                        <div>
+                          <b>{r.v}</b>
+                          <span>{r.k}</span>
+                        </div>
                       ))}
                     </div>
-                    <div class="feat-links">
-                      {hasCase && (
-                        <a class="link-cs" href={`/${p.slug}`}>
-                          Case study &rarr;
-                        </a>
-                      )}
-                      {p.link && (
-                        <a class="link-ext" href={p.link} rel="noopener noreferrer" target="_blank">
-                          {p.link.replace(/^https?:\/\//, "").replace(/\/$/, "")} &nearr;
-                        </a>
-                      )}
-                    </div>
+                  )}
 
-                    {
-                      !hasCase && (p.more || p.gallery) && (
-                        <details class="more">
-                          <summary>
-                            <span class="more-open">More on this project</span>
-                            <span class="more-close">Show less</span>
-                          </summary>
-                          {p.more && <p class="more-body">{p.more}</p>}
-                          {p.gallery && (
-                            <div class="gallery">
-                              {p.gallery.map((g) => (
-                                <figure class="shot-sm">
-                                  <img src={g.src} alt={`${p.title} — ${g.caption}`} loading="lazy" />
-                                  <figcaption>{g.caption}</figcaption>
-                                </figure>
-                              ))}
-                            </div>
-                          )}
-                        </details>
-                      )
-                    }
-                  </div>
-                </article>
-              );
-            })
-          }
-        </div>
-      </section>
-
-      <!-- ══ About ═════════════════════════════════════════ -->
-      <section class="section" id="about">
-        <p class="seclabel"><span class="dot"></span><span class="idx">02</span> · About</p>
-        <h2 class="h2">How I work</h2>
-        <div class="focus">
-          {
-            focus.map((f) => (
-              <div class="focus-item">
-                <h3 class="focus-label">{f.label}</h3>
-                <p class="focus-body">{f.body}</p>
-              </div>
-            ))
-          }
-        </div>
-      </section>
-
-      <!-- ══ Skills ════════════════════════════════════════ -->
-      <section class="section">
-        <p class="seclabel"><span class="dot"></span><span class="idx">03</span> · Toolkit</p>
-        <h2 class="h2">What I use</h2>
-        <div class="skills">
-          {
-            skills.map((s) => (
-              <div>
-                <h3 class="skill-group-name">{s.group}</h3>
-                <div class="chips">
-                  {s.items.map((i) => (
-                    <span class="chip">{i}</span>
-                  ))}
-                </div>
-              </div>
-            ))
-          }
-        </div>
-      </section>
-
-      <!-- ══ Experience + Education ════════════════════════ -->
-      <section class="section">
-        <p class="seclabel"><span class="dot"></span><span class="idx">04</span> · Background</p>
-        <div class="two-col">
-          <div>
-            <h2 class="h2">Experience</h2>
-            {
-              experience.map((e) => (
-                <article class="entry">
-                  <div class="entry-top">
-                    <h3 class="entry-role">{e.role}</h3>
-                    <span class="entry-period">{e.period}</span>
-                  </div>
-                  <p class="entry-org">{e.org} · {e.place}</p>
-                  <ul class="entry-points">
-                    {e.points.map((pt) => (
-                      <li>{pt}</li>
+                  <p class="feat-blurb">{p.detail}</p>
+                  <div class="chips">
+                    {p.tags.map((t) => (
+                      <span class="chip">{t}</span>
                     ))}
-                  </ul>
-                </article>
-              ))
-            }
-          </div>
-          <div>
-            <h2 class="h2">Education</h2>
-            {
-              education.map((e) => (
-                <article class="entry">
-                  <div class="entry-top">
-                    <h3 class="entry-role">{e.role}</h3>
-                    <span class="entry-period">{e.period}</span>
                   </div>
-                  <p class="entry-org">{e.org} · {e.place}</p>
-                </article>
-              ))
-            }
-          </div>
-        </div>
-      </section>
+                  <div class="feat-links">
+                    {hasCase && (
+                      <a class="link-cs" href={`/${p.slug}`}>
+                        Case study &rarr;
+                      </a>
+                    )}
+                    {p.link && (
+                      <a class="link-ext" href={p.link} rel="noopener noreferrer" target="_blank">
+                        {p.link.replace(/^https?:\/\//, "").replace(/\/$/, "")} &nearr;
+                      </a>
+                    )}
+                  </div>
 
-      <!-- ══ Contact ═══════════════════════════════════════ -->
-      <section class="contact-band" id="contact">
-        <p class="seclabel"><span class="dot"></span><span class="idx">05</span> · Contact</p>
-        <h2 class="h2">Let’s talk</h2>
-        <div class="contact-grid">
-          <div>
-            <span class="contact-key">Email</span>
-            <span class="contact-val"><a class="uline" href={`mailto:${profile.email}`}>{profile.email}</a></span>
-          </div>
-          <div>
-            <span class="contact-key">Phone</span>
-            <span class="contact-val">{profile.phone}</span>
-          </div>
-          {
-            profile.links.map((l) => (
-              <div>
-                <span class="contact-key">{l.label}</span>
-                <span class="contact-val">
-                  <a class="uline" href={l.href} rel="noopener noreferrer" target="_blank">
-                    {l.href.replace("https://", "").replace("www.", "")}
-                  </a>
-                </span>
+                  {
+                    !hasCase && (p.more || p.gallery) && (
+                      <details class="more">
+                        <summary>
+                          <span class="more-open">More on this project</span>
+                          <span class="more-close">Show less</span>
+                        </summary>
+                        {p.more && <p class="more-body">{p.more}</p>}
+                        {p.gallery && (
+                          <div class="gallery">
+                            {p.gallery.map((g) => (
+                              <figure class="shot-sm">
+                                <img src={g.src} alt={`${p.title} — ${g.caption}`} loading="lazy" />
+                                <figcaption>{g.caption}</figcaption>
+                              </figure>
+                            ))}
+                          </div>
+                        )}
+                      </details>
+                    )
+                  }
+                </div>
+
+                <div class="shot">
+                  <img src={p.image} alt={`${p.title} screenshot`} loading="lazy" />
+                </div>
+              </article>
+            );
+          })
+        }
+      </div>
+    </section>
+
+    <!-- ══ About ════════════════════════════════════════════ -->
+    <section class="section" id="about">
+      <p class="seclabel"><span class="dot"></span>How I work</p>
+      <h2 class="h2">Three things I hold to</h2>
+      <div class="focus">
+        {
+          focus.map((f) => (
+            <div class="focus-item">
+              <h3 class="focus-label">{f.label}</h3>
+              <p class="focus-body">{f.body}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ══ Toolkit ══════════════════════════════════════════ -->
+    <section class="section">
+      <p class="seclabel"><span class="dot"></span>Toolkit</p>
+      <h2 class="h2">What I use</h2>
+      <div class="skills">
+        {
+          skills.map((s) => (
+            <div>
+              <h3 class="skill-group-name">{s.group}</h3>
+              <div class="chips">
+                {s.items.map((i) => (
+                  <span class="chip">{i}</span>
+                ))}
               </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ══ Background ═══════════════════════════════════════ -->
+    <section class="section">
+      <p class="seclabel"><span class="dot"></span>Background</p>
+      <div class="two-col">
+        <div>
+          <h2 class="h2">Experience</h2>
+          {
+            experience.map((e) => (
+              <article class="entry">
+                <div class="entry-top">
+                  <h3 class="entry-role">{e.role}</h3>
+                  <span class="entry-period">{e.period}</span>
+                </div>
+                <p class="entry-org">{e.org} · {e.place}</p>
+                <ul class="entry-points">
+                  {e.points.map((pt) => (
+                    <li>{pt}</li>
+                  ))}
+                </ul>
+              </article>
             ))
           }
         </div>
-        <a class="contact-cta" href={profile.resumeFile}>Download résumé (PDF)</a>
-      </section>
-    </main>
+        <div>
+          <h2 class="h2">Education</h2>
+          {
+            education.map((e) => (
+              <article class="entry">
+                <div class="entry-top">
+                  <h3 class="entry-role">{e.role}</h3>
+                  <span class="entry-period">{e.period}</span>
+                </div>
+                <p class="entry-org">{e.org} · {e.place}</p>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ Contact ══════════════════════════════════════════ -->
+    <section class="contact-band" id="contact">
+      <p class="seclabel"><span class="dot"></span>Contact</p>
+      <h2 class="h2">Let’s talk</h2>
+      <div class="contact-grid">
+        <div>
+          <span class="contact-key">Email</span>
+          <span class="contact-val"><a class="uline" href={`mailto:${profile.email}`}>{profile.email}</a></span>
+        </div>
+        <div>
+          <span class="contact-key">Phone</span>
+          <span class="contact-val">{profile.phone}</span>
+        </div>
+        {
+          profile.links.map((l) => (
+            <div>
+              <span class="contact-key">{l.label}</span>
+              <span class="contact-val">
+                <a class="uline" href={l.href} rel="noopener noreferrer" target="_blank">
+                  {l.href.replace("https://", "").replace("www.", "")}
+                </a>
+              </span>
+            </div>
+          ))
+        }
+      </div>
+      <a class="contact-cta" href={profile.resumeFile}>Download résumé (PDF)</a>
+    </section>
+  </main>
 </Base>

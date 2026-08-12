@@ -92,6 +92,13 @@ export const projects = [
     tagline: "A service and running-cost logbook that works with no signal",
     year: "2026",
     tags: ["Web Development", "TypeScript", "React", "Offline PWA"],
+    // Readings are facts about the build, shown as an instrument reports them.
+    // Keep them true and checkable — that is the whole point of the device.
+    readings: [
+      { v: "0", k: "network calls" },
+      { v: "44", k: "assertions" },
+      { v: "374", k: "kB shipped" },
+    ],
     image: "/projects/moto-log.svg",
     caseStudy: true,
     role: "Built it end to end — interface, domain logic, offline delivery and native packaging.",
@@ -107,6 +114,10 @@ export const projects = [
     tagline: "Account management for a gamified learning platform",
     year: "2025",
     tags: ["Web Development", "Python", "JavaScript"],
+    readings: [
+      { v: "4", k: "account flows" },
+      { v: "2", k: "sign-in methods" },
+    ],
     image: "/projects/genquest.png",
     role: "Built the registration, sign-in, profile and password-reset flows.",
     detail:
@@ -135,6 +146,11 @@ export const projects = [
     tagline: "Interactive Power BI reporting over regional market data",
     year: "2025",
     tags: ["Data Analytics", "Power BI", "SQL"],
+    readings: [
+      { v: "4", k: "report pages" },
+      { v: "1", k: "opportunity score" },
+      { v: "1", k: "slicer drives all" },
+    ],
     image: "/projects/powerbi.png",
     role: "Modelled the data and designed the report.",
     detail:
@@ -168,6 +184,11 @@ export const projects = [
     tagline: "A trading marketplace and live catalogue for Pokémon cards",
     year: "2026",
     tags: ["Web Development", "C#", "ASP.NET Core"],
+    readings: [
+      { v: "20,000+", k: "cards catalogued" },
+      { v: "173", k: "sets" },
+      { v: "3", k: "ways to trade" },
+    ],
     image: "/projects/arcanevault.png",
     caseStudy: true,
     // TODO (Jabez): confirm scope — solo or team.
