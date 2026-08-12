@@ -155,6 +155,14 @@ The site's CSP is `script-src 'self'` with **no** `'unsafe-inline'`, so an inlin
 blocked outright. Parcel's normal output — external, same-origin `.js` and `.css` — satisfies
 it as-is. Anything that injects an inline script breaks the page.
 
+### A CSP violation that is expected
+
+Opening a sheet logs `Applying inline style violates ... style-src 'self'`. That is Radix
+injecting a `<style>` tag to lock background scroll, which the policy blocks. It is benign:
+`body.sheet-open { overflow: hidden }` in `index.css` does the same job from an external
+stylesheet. The console noise is Radix retrying; the behaviour is correct. Do not "fix" it by
+adding `'unsafe-inline'` — that would weaken the policy for the whole site to silence a log line.
+
 ### Service worker
 
 Generated after the build so its precache list holds the real hashed filenames, and the cache

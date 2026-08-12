@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { useApp } from "@/lib/ctx";
 import { EXPENSE_CATS, uid } from "@/lib/store";
+import { DateField } from "./DateField";
 import { num, todayISO } from "@/lib/format";
 import type { Entry, FuelEntry, ServiceEntry, ExpenseEntry } from "@/lib/types";
 
@@ -14,6 +15,14 @@ function Shell({
   title: string; onClose: () => void; onSubmit: () => void;
   submitLabel: string; onDelete?: () => void; children: ReactNode;
 }) {
+  // Radix locks background scroll by injecting a <style> tag, which the site's
+  // style-src 'self' blocks outright — so the page scrolls under an open sheet.
+  // A class from our own stylesheet does the same job within the policy.
+  useEffect(() => {
+    document.body.classList.add("sheet-open");
+    return () => document.body.classList.remove("sheet-open");
+  }, []);
+
   return (
     <Dialog open onOpenChange={o => { if (!o) onClose(); }}>
       <DialogContent
@@ -113,9 +122,7 @@ export function FuelSheet({ entry, onClose }: { entry?: FuelEntry; onClose: () =
       }}
     >
       <div className="grid grid-cols-2 gap-[10px]">
-        <Field label="Date">
-          <input className="inp" type="date" value={date} onChange={e => setDate(e.target.value)} />
-        </Field>
+        <DateField label="Date" value={date} onChange={setDate} />
         <Field label="Odometer">
           <input className="inp" inputMode="numeric" value={odo} onChange={e => setOdo(e.target.value)} />
         </Field>
@@ -212,9 +219,7 @@ export function ServiceSheet({ entry, onClose }: { entry?: ServiceEntry; onClose
       }}
     >
       <div className="grid grid-cols-2 gap-[10px]">
-        <Field label="Date">
-          <input className="inp" type="date" value={date} onChange={e => setDate(e.target.value)} />
-        </Field>
+        <DateField label="Date" value={date} onChange={setDate} />
         <Field label="Odometer">
           <input className="inp" inputMode="numeric" value={odo} onChange={e => setOdo(e.target.value)} />
         </Field>
@@ -290,9 +295,7 @@ export function ExpenseSheet({ entry, onClose }: { entry?: ExpenseEntry; onClose
       }}
     >
       <div className="grid grid-cols-2 gap-[10px]">
-        <Field label="Date">
-          <input className="inp" type="date" value={date} onChange={e => setDate(e.target.value)} />
-        </Field>
+        <DateField label="Date" value={date} onChange={setDate} />
         <Field label="Paid">
           <input className="inp" inputMode="decimal" placeholder="0.00"
                  value={amount} onChange={e => setAmount(e.target.value)} />
@@ -303,6 +306,9 @@ export function ExpenseSheet({ entry, onClose }: { entry?: ExpenseEntry; onClose
       <Field label="Category">
         <select className="inp" style={{ fontFamily: "var(--body)" }}
                 value={cat} onChange={e => setCat(e.target.value)}>
+          {/* An older entry may hold a category no longer on the list. Keep it as
+              an option, or opening that entry would silently re-file it. */}
+          {!EXPENSE_CATS.includes(cat) && cat && <option value={cat}>{cat}</option>}
           {EXPENSE_CATS.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </Field>

@@ -425,6 +425,56 @@
     text-transform: uppercase; letter-spacing: .08em; font-size: 13px; font-weight: 600;
   }
 
+  /* --- date field ------------------------------------------------------- */
+  .datefield {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; cursor: pointer; text-align: left;
+    background: var(--stock); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 3px; padding: 10px 11px;
+    font-family: var(--mono); font-size: 15px; line-height: 1.3;
+  }
+  .datefield:hover { border-color: var(--ink-2); }
+  .datefield[aria-expanded="true"] { border-color: var(--brand); }
+  .datefield--empty { color: var(--ink-3); }
+  .datefield__mark { font-size: 9px; color: var(--ink-3); }
+
+  /* Stands in for Radix's scroll lock, whose injected <style> the CSP blocks. */
+  body.sheet-open { overflow: hidden; }
+
+  .field-date.is-open { grid-column: 1 / -1; }
+
+  .cal {
+    margin-top: 6px; padding: 12px;
+    background: var(--card-2); border: 1px solid var(--rule); border-radius: 3px;
+  }
+  .cal__quick { display: flex; gap: 6px; margin-bottom: 11px; }
+  .cal__head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 9px;
+  }
+  .cal__month {
+    font-family: var(--display); font-variation-settings: 'wdth' 87;
+    text-transform: uppercase; letter-spacing: .1em; font-size: 12.5px; font-weight: 600;
+  }
+  .cal__dow, .cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal__dow {
+    margin-bottom: 4px;
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--ink-3); text-align: center;
+  }
+  .cal__day {
+    aspect-ratio: 1; min-height: 30px; cursor: pointer;
+    background: none; border: 1px solid transparent; border-radius: 2px;
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+    font-size: 12.5px; color: var(--ink);
+  }
+  .cal__day:hover { border-color: var(--ink-2); }
+  /* Today is outlined, the selection is filled — so both can show at once. */
+  .cal__day[data-today="true"] { border-color: var(--ink-3); color: var(--ink-2); }
+  .cal__day[data-selected="true"] {
+    background: var(--ink); color: var(--stock); border-color: var(--ink); font-weight: 600;
+  }
+
   /* Backup age reads as one more tell-tale: dark when there is nothing to say,
      amber once a backup is old enough to matter. Same vocabulary as the dash. */
   .backup {

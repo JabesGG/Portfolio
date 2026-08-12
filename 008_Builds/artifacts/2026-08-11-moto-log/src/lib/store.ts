@@ -27,9 +27,14 @@ export const DEFAULT_DATES: Omit<KeyDate, "id" | "due" | "remind">[] = [
   { n: "COE expiry",         months: 0 },
 ];
 
+/** "Upgrades & mods" is what you bolt to the bike; "Gear & accessories" is what
+ *  you wear. Keeping them apart is the difference between knowing what the bike
+ *  costs to run and what the hobby costs. Never rename an existing entry here —
+ *  logged expenses store the string, so a rename orphans them. */
 export const CATS = [
   "Fuel", "Service & parts", "Road tax", "Insurance", "COE", "Inspection",
-  "Parking & ERP", "Gear & accessories", "Fines", "Loan / instalment", "Other",
+  "Parking & ERP", "Upgrades & mods", "Gear & accessories", "Fines",
+  "Loan / instalment", "Other",
 ];
 
 /** Categories a manual expense can use — fuel and service get their own forms. */
