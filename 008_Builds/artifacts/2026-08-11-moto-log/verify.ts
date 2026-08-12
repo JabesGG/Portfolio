@@ -1,4 +1,5 @@
 import { statusOf, dateStatus, fuelRuns, totals, monthlySpend, entriesSorted } from "./src/lib/calc";
+import { dueNotifications } from "./src/lib/reminders";
 import { addMonths, dmy, money, km } from "./src/lib/format";
 import type { State } from "./src/lib/types";
 
@@ -91,6 +92,40 @@ check("km", km(28476), "28,476");
 const ms = monthlySpend(S, 12);
 check("12 buckets", ms.length, 12);
 check("Aug 2026 bucket", ms[ms.length - 1].total.toFixed(2), (31.68 + 18).toFixed(2));
+
+console.log("\n-- reminders (pure scheduling logic) --");
+// Fixed clock: these assertions must not drift with the real date.
+const NOW = new Date(2026, 7, 11, 12, 0, 0); // 11 Aug 2026, local
+const due = dueNotifications(S, NOW);
+const ids = due.map(d => d.id).sort();
+
+check("road tax warn window already passed, so not scheduled", ids.includes("date:d1"), false);
+check("road tax expiry-day reminder scheduled", ids.includes("date:d1:day"), true);
+check("engine oil (6mth from 15 Jun) scheduled", ids.includes("svc:s1"), true);
+check("oil filter (12mth) scheduled", ids.includes("svc:s2"), true);
+check("chain lube (1mth from 20 Jul) scheduled", ids.includes("svc:s3"), true);
+check("rear tyre is km-only, never scheduled", ids.includes("svc:s4"), false);
+check("valve clearance is km-only, never scheduled", ids.includes("svc:s5"), false);
+check("inspection has no date, so nothing scheduled", ids.some(i => i.startsWith("date:d3")), false);
+// Every dated renewal still ahead of its warning window yields two: the warning
+// and the expiry day itself. Insurance and COE are both far out, so both give 2.
+check("insurance gives warning + expiry day", ids.filter(i => i.startsWith("date:d2")).length, 2);
+check("COE gives warning + expiry day", ids.filter(i => i.startsWith("date:d4")).length, 2);
+check("total scheduled", due.length, 1 + 2 + 2 + 3);
+
+const oil = due.find(d => d.id === "svc:s1")!;
+check("engine oil fires 7 days before due", oil.at.toISOString().slice(0, 10), "2026-12-08");
+check("reminders fire at 9am local", oil.at.getHours(), 9);
+
+// Wind the clock back: now the road-tax warning is still ahead of us.
+const early = dueNotifications(S, new Date(2026, 6, 1, 12, 0, 0));
+check("30-day road tax warning scheduled when still ahead", early.some(d => d.id === "date:d1"), true);
+const rt = early.find(d => d.id === "date:d1")!;
+check("road tax warning is 30 days before 5 Sep", rt.at.toISOString().slice(0, 10), "2026-08-06");
+
+// Nothing in the past should ever be scheduled.
+const late = dueNotifications(S, new Date(2030, 0, 1));
+check("no reminders scheduled once everything is in the past", late.length, 0);
 
 console.log("\n" + (fails ? `FAILED: ${fails}` : "All checks passed") + "\n");
 process.exit(fails ? 1 : 0);

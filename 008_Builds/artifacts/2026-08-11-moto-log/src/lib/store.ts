@@ -49,22 +49,5 @@ export function seed(): State {
   };
 }
 
-export function load(): State {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) {
-      const p = JSON.parse(raw) as State;
-      if (p && p.bike && Array.isArray(p.entries)) {
-        if (!Array.isArray(p.schedule)) p.schedule = seed().schedule;
-        if (!Array.isArray(p.dates)) p.dates = seed().dates;
-        return p;
-      }
-    }
-  } catch { /* fall through to a fresh book */ }
-  return seed();
-}
-
-export function save(s: State): boolean {
-  try { localStorage.setItem(KEY, JSON.stringify(s)); return true; }
-  catch { return false; }
-}
+// Persistence lives in ./storage, which picks localStorage on the web and
+// native Preferences inside the app shell.

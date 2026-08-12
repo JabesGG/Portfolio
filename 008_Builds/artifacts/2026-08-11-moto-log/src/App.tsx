@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { AppCtx, type Api, type Tab, type SheetKind } from "@/lib/ctx";
-import { load, save, THEME_KEY } from "@/lib/store";
+import { THEME_KEY } from "@/lib/store";
+import { load, loadSync, save } from "@/lib/storage";
+import { syncReminders } from "@/lib/reminders";
 import type { State, Entry, FuelEntry, ServiceEntry, ExpenseEntry } from "@/lib/types";
 import { Dash } from "@/views/Dash";
 import { LogView } from "@/views/LogView";
@@ -16,9 +18,37 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "bike", label: "Bike" },
 ];
 
+/**
+ * The web reads its book synchronously, so `initial` is already populated on the
+ * very first render and nothing flashes. Native storage is async, so there the
+ * first render has nothing and we wait — which is why Book is a separate
+ * component: it can take the loaded state as a prop and keep its hooks simple.
+ */
 export default function App() {
-  const ref = useRef<State>(load());
-  const [s, setS] = useState<State>(ref.current);
+  const [initial, setInitial] = useState<State | null>(() => loadSync());
+
+  useEffect(() => {
+    if (initial) return;
+    let live = true;
+    load().then(v => { if (live) setInitial(v); });
+    return () => { live = false; };
+  }, [initial]);
+
+  if (!initial) {
+    return (
+      <div className="app">
+        <div className="wrap" style={{ paddingTop: 40 }}>
+          <span className="eyebrow">Moto Log</span>
+        </div>
+      </div>
+    );
+  }
+  return <Book initial={initial} />;
+}
+
+function Book({ initial }: { initial: State }) {
+  const ref = useRef<State>(initial);
+  const [s, setS] = useState<State>(initial);
   const [tab, setTab] = useState<Tab>("dash");
   const [sheet, setSheet] = useState<{ kind: SheetKind; entry?: Entry }>({ kind: null });
   const [msg, setMsg] = useState<{ n: number; text: string } | null>(null);
@@ -42,6 +72,9 @@ export default function App() {
     return () => clearTimeout(id);
   }, [msg]);
 
+  // Rescheduled from scratch whenever the book changes. No-op on the web.
+  useEffect(() => { void syncReminders(s); }, [s]);
+
   // Home-screen shortcuts land on ?add=fuel etc. Open that sheet, then drop the
   // query so a refresh doesn't reopen it.
   useEffect(() => {
@@ -54,6 +87,12 @@ export default function App() {
 
   const toast = (text: string) => setMsg(m => ({ n: (m?.n ?? 0) + 1, text }));
 
+  const persist = (next: State) => {
+    save(next).then(ok => {
+      if (!ok) toast("Couldn't save — storage is full or blocked.");
+    });
+  };
+
   const api: Api = {
     s,
     // clone-then-commit, so a StrictMode double-render can never double-apply
@@ -61,12 +100,12 @@ export default function App() {
       const next = structuredClone(ref.current);
       fn(next);
       ref.current = next;
-      if (!save(next)) toast("Couldn't save — browser storage is full or blocked.");
+      persist(next);
       setS(next);
     },
     replace(next) {
       ref.current = next;
-      save(next);
+      persist(next);
       setS(next);
     },
     openSheet(kind, entry) { setSheet({ kind, entry }); },
@@ -112,7 +151,7 @@ export default function App() {
         </Tabs.Root>
 
         <footer className="wrap colophon mt-7">
-          <span>Saved in this browser · SGD · km</span>
+          <span>Saved on this device · SGD · km</span>
           <span>{s.entries.length} {s.entries.length === 1 ? "entry" : "entries"}</span>
         </footer>
       </div>
