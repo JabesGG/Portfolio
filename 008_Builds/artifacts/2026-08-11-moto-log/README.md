@@ -32,6 +32,7 @@ straight into that form.
 | `tools/make-icons.cjs` | Renders the app icons as PNGs with no image dependencies (raw pixels + zlib). The mark is a seven-segment odometer readout. |
 | `tools/make-sw.cjs` | Writes `sw.js` **after** the build, once asset hashes are known. |
 | `tools/serve.cjs` | Serves `public/moto` locally under the *real* CSP, read out of `public/_headers`. |
+| `tools/fetch-stations.cjs` | Build-time OpenStreetMap query → `src/data/stations.json`. Re-run occasionally; stations open and close. |
 | `verify.ts` | 57 assertions over the calculations, reminder scheduling and backup age. |
 | `bundle.html` / `artifact.html` | Single-file builds. `artifact.html` is `bundle.html` with the outer `<!DOCTYPE>/<html>/<body>` stripped, because the artifact host supplies its own skeleton. |
 
@@ -159,6 +160,21 @@ picked up the new build, which is the whole point of it.
 The site's CSP is `script-src 'self'` with **no** `'unsafe-inline'`, so an inlined bundle is
 blocked outright. Parcel's normal output — external, same-origin `.js` and `.css` — satisfies
 it as-is. Anything that injects an inline script breaks the page.
+
+### Nearest fuel
+
+The station list is baked into the bundle at build time rather than queried live —
+about 200 Singapore forecourts, 12 kB. Two reasons: the app has to work at a pump with
+no signal, which is exactly when you need it; and a live query would mean opening
+`connect-src` in the site's CSP for a third-party API. Your GPS position never leaves
+the device, because nothing is sent anywhere.
+
+Distances are straight-line, not road distance, so the nearest by air is not always the
+shortest ride — stated in the sheet rather than glossed over. Directions hand off to the
+phone's maps app, which has the live traffic and routing this cannot.
+
+Refresh the list with `node tools/fetch-stations.cjs`. Overpass rate-limits, so if it
+returns 429 or 504, wait a few minutes rather than retrying in a loop.
 
 ### A CSP violation that is expected
 

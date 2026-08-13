@@ -1,5 +1,6 @@
 import { statusOf, dateStatus, fuelRuns, totals, monthlySpend, entriesSorted } from "./src/lib/calc";
 import { dueNotifications } from "./src/lib/reminders";
+import { distanceKm, bearingDeg, compass, nearest, prettyDistance, STATIONS } from "./src/lib/stations";
 import { addMonths, agoLabel, backupIsStale, dmy, money, km } from "./src/lib/format";
 import type { State } from "./src/lib/types";
 
@@ -150,6 +151,47 @@ check("entries but no backup is stale", backupIsStale(undefined, true), true);
 check("backed up today is not stale", backupIsStale(daysAgo(0), true), false);
 check("90 days is not yet stale", backupIsStale(daysAgo(90), true), false);
 check("91 days is stale", backupIsStale(daysAgo(91), true), true);
+
+console.log("\n-- nearest fuel --");
+// Known Singapore landmarks, checked against real-world distances.
+const MARINA_BAY = { lat: 1.2834, lon: 103.8607 };
+const CHANGI     = { lat: 1.3644, lon: 103.9915 };
+const JURONG     = { lat: 1.3329, lon: 103.7436 };
+
+const d1 = distanceKm(MARINA_BAY.lat, MARINA_BAY.lon, CHANGI.lat, CHANGI.lon);
+check("Marina Bay → Changi ≈ 17 km", Math.round(d1), 17);
+const d2 = distanceKm(MARINA_BAY.lat, MARINA_BAY.lon, JURONG.lat, JURONG.lon);
+check("Marina Bay → Jurong ≈ 14 km", Math.round(d2), 14);
+check("distance to self is 0", distanceKm(1.3, 103.8, 1.3, 103.8), 0);
+check("distance is symmetric",
+  distanceKm(MARINA_BAY.lat, MARINA_BAY.lon, CHANGI.lat, CHANGI.lon).toFixed(6),
+  distanceKm(CHANGI.lat, CHANGI.lon, MARINA_BAY.lat, MARINA_BAY.lon).toFixed(6));
+
+check("due north is N", compass(bearingDeg(1.30, 103.80, 1.40, 103.80)), "N");
+check("due east is E",  compass(bearingDeg(1.30, 103.80, 1.30, 103.90)), "E");
+check("due south is S", compass(bearingDeg(1.30, 103.80, 1.20, 103.80)), "S");
+check("due west is W",  compass(bearingDeg(1.30, 103.80, 1.30, 103.70)), "W");
+check("north-east is NE", compass(bearingDeg(1.30, 103.80, 1.40, 103.90)), "NE");
+
+const FAKE = [
+  { name: "Far",    brand: "X", lat: 1.44, lon: 103.90 },
+  { name: "Close",  brand: "X", lat: 1.285, lon: 103.861 },
+  { name: "Middle", brand: "X", lat: 1.32, lon: 103.87 },
+];
+const near3 = nearest(MARINA_BAY.lat, MARINA_BAY.lon, 3, FAKE);
+check("sorted nearest first", near3.map(s => s.name).join(","), "Close,Middle,Far");
+check("count is respected", nearest(MARINA_BAY.lat, MARINA_BAY.lon, 2, FAKE).length, 2);
+check("empty list is handled", nearest(1.3, 103.8, 5, []).length, 0);
+
+check("sub-km shows metres", prettyDistance(0.42), "420 m");
+check("over a km shows km", prettyDistance(3.14), "3.1 km");
+
+check("station list is bundled", STATIONS.length > 150, true);
+check("every station has coordinates",
+  STATIONS.every(s => typeof s.lat === "number" && typeof s.lon === "number"), true);
+check("every station sits inside Singapore",
+  STATIONS.every(s => s.lat > 1.15 && s.lat < 1.50 && s.lon > 103.5 && s.lon < 104.1), true);
+check("every station is named", STATIONS.every(s => s.name.length > 0), true);
 
 console.log("\n" + (fails ? `FAILED: ${fails}` : "All checks passed") + "\n");
 process.exit(fails ? 1 : 0);

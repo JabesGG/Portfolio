@@ -10,6 +10,7 @@ import { LogView } from "@/views/LogView";
 import { Costs } from "@/views/Costs";
 import { BikeView } from "@/views/BikeView";
 import { OdoSheet, FuelSheet, ServiceSheet, ExpenseSheet } from "@/components/Sheets";
+import { NearestFuel } from "@/components/NearestFuel";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dash", label: "Dash" },
@@ -164,6 +165,7 @@ function Book({ initial }: { initial: State }) {
       {sheet.kind === "fuel" && <FuelSheet entry={sheet.entry as FuelEntry | undefined} onClose={close} />}
       {sheet.kind === "service" && <ServiceSheet entry={sheet.entry as ServiceEntry | undefined} onClose={close} />}
       {sheet.kind === "expense" && <ExpenseSheet entry={sheet.entry as ExpenseEntry | undefined} onClose={close} />}
+      {sheet.kind === "nearest" && <NearestFuel onClose={close} />}
 
       {msg && (
         <div role="status"

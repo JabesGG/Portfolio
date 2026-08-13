@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 import type { State, Entry } from "./types";
 
 export type Tab = "dash" | "log" | "costs" | "bike";
-export type SheetKind = "odo" | "fuel" | "service" | "expense" | null;
+export type SheetKind = "odo" | "fuel" | "service" | "expense" | "nearest" | null;
 
 export interface Api {
   s: State;

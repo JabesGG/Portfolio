@@ -52,3 +52,12 @@ export function QuickAdd({ onPick }: { onPick: (k: "fuel" | "service" | "expense
     </div>
   );
 }
+
+/** Separate from QuickAdd: this finds something rather than recording something. */
+export function FindFuel({ onPick }: { onPick: () => void }) {
+  return (
+    <button className="qbtn qbtn--wide" onClick={onPick}>
+      <span>📍</span>Nearest fuel
+    </button>
+  );
+}

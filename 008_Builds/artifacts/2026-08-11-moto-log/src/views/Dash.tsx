@@ -1,6 +1,6 @@
 import { useApp } from "@/lib/ctx";
 import { Odometer } from "@/components/Odometer";
-import { Lamp, Stat, Empty, Panel, QuickAdd } from "@/components/Lamp";
+import { Lamp, Stat, Empty, Panel, QuickAdd, FindFuel } from "@/components/Lamp";
 import { EntryRow } from "@/components/EntryRow";
 import { statusOf, dateStatus, entriesSorted, totals, monthlySpend, fuelRuns } from "@/lib/calc";
 import { money0 } from "@/lib/format";
@@ -40,6 +40,9 @@ export function Dash() {
 
         <Panel title="Log something">
           <QuickAdd onPick={k => openSheet(k)} />
+          <div className="mt-2">
+            <FindFuel onPick={() => openSheet("nearest")} />
+          </div>
         </Panel>
       </div>
 

@@ -425,6 +425,37 @@
     text-transform: uppercase; letter-spacing: .08em; font-size: 13px; font-weight: 600;
   }
 
+  /* --- nearest fuel ------------------------------------------------------ */
+  .qbtn--wide { width: 100%; flex-direction: row; gap: 9px; }
+
+  .stations { list-style: none; margin: 0; padding: 0; }
+  .station {
+    display: grid; grid-template-columns: 2.6rem 1fr auto; gap: 12px; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--rule-2); width: 100%;
+  }
+  .stations li:last-child .station { border-bottom: 0; }
+  .station:hover { background: var(--card-2); }
+  /* The compass point sits where the record number does elsewhere: a fixed
+     left column you can scan down. */
+  .station__dir {
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    color: var(--brand); letter-spacing: .06em; text-align: center;
+  }
+  .station__body { min-width: 0; }
+  .station__name {
+    display: block;
+    font-family: var(--display); font-variation-settings: 'wdth' 87;
+    text-transform: uppercase; letter-spacing: .06em; font-size: 13.5px; font-weight: 600;
+  }
+  .station__brand {
+    display: block; margin-top: 1px;
+    font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  }
+  .station__km {
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+    font-size: 13px; font-weight: 600; white-space: nowrap;
+  }
+
   /* --- date field ------------------------------------------------------- */
   .datefield {
     width: 100%; display: flex; align-items: center; justify-content: space-between;
