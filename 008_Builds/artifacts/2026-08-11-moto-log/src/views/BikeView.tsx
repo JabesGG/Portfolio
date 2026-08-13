@@ -5,6 +5,7 @@ import { statusOf, dateStatus, csv } from "@/lib/calc";
 import { addMonths, agoLabel, backupIsStale, dmy, num, todayISO } from "@/lib/format";
 import { seed, uid, KEY } from "@/lib/store";
 import { durability, type Durability } from "@/lib/storage";
+import { BUILD_STAMP } from "@/lib/build";
 import type { State } from "@/lib/types";
 
 /* Drafts hold raw strings so half-typed numbers don't get coerced mid-keystroke.
@@ -333,7 +334,12 @@ export function BikeView() {
                  };
                  r.readAsText(file);
                }} />
-        <p className="field__h">Stored under <code>{KEY}</code> in this browser.</p>
+        <p className="field__h">
+          Stored under <code>{KEY}</code> on this device.
+          <br />
+          Build <b>{BUILD_STAMP}</b> — if this date has not changed after an update,
+          close the app fully and open it again.
+        </p>
       </Panel>
     </div>
   );

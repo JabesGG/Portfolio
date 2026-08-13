@@ -142,12 +142,17 @@ pnpm install
 node tools/make-icons.cjs                       # only when the icon changes
 bash ./node_modules/.bin/tsc --noEmit -p tsconfig.app.json
 bash ./node_modules/.bin/jiti verify.ts
-MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' \
+BUILD_STAMP="$(date -u '+%Y-%m-%d %H:%M UTC')" \
+  MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' \
   bash ./node_modules/.bin/parcel build index.html \
   --public-url /moto/ --dist-dir dist --no-source-maps
 node tools/make-sw.cjs                          # must run after the build
 cp -r dist/. ../../../public/moto/
 ```
+
+`BUILD_STAMP` is shown at the bottom of the Bike tab. Forgetting it is not fatal —
+the stamp falls back to `dev` — but then nobody can tell whether a phone has
+picked up the new build, which is the whole point of it.
 
 ### Why the web build is not a single file
 
