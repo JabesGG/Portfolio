@@ -3,6 +3,7 @@ import * as Tabs from "@radix-ui/react-tabs";
 import { AppCtx, type Api, type Tab, type SheetKind } from "@/lib/ctx";
 import { THEME_KEY } from "@/lib/store";
 import { load, loadSync, save, requestPersistence } from "@/lib/storage";
+import { watchForUpdate } from "@/lib/updates";
 import { syncReminders } from "@/lib/reminders";
 import type { State, Entry, FuelEntry, ServiceEntry, ExpenseEntry } from "@/lib/types";
 import { Dash } from "@/views/Dash";
@@ -53,6 +54,7 @@ function Book({ initial }: { initial: State }) {
   const [tab, setTab] = useState<Tab>("dash");
   const [sheet, setSheet] = useState<{ kind: SheetKind; entry?: Entry }>({ kind: null });
   const [msg, setMsg] = useState<{ n: number; text: string } | null>(null);
+  const [applyUpdate, setApplyUpdate] = useState<(() => void) | null>(null);
   const [theme, setTheme] = useState<string>(() => {
     try { return localStorage.getItem(THEME_KEY) || ""; } catch { return ""; }
   });
@@ -79,6 +81,9 @@ function Book({ initial }: { initial: State }) {
   // Ask once per launch to have this data exempted from eviction. Silent either
   // way — it can only improve on the default, and nothing depends on it.
   useEffect(() => { void requestPersistence(); }, []);
+
+  // setState with a function argument would call it; wrap so we store it.
+  useEffect(() => { watchForUpdate(apply => setApplyUpdate(() => apply)); }, []);
 
   // Home-screen shortcuts land on ?add=fuel etc. Open that sheet, then drop the
   // query so a refresh doesn't reopen it.
@@ -166,6 +171,14 @@ function Book({ initial }: { initial: State }) {
       {sheet.kind === "service" && <ServiceSheet entry={sheet.entry as ServiceEntry | undefined} onClose={close} />}
       {sheet.kind === "expense" && <ExpenseSheet entry={sheet.entry as ExpenseEntry | undefined} onClose={close} />}
       {sheet.kind === "nearest" && <NearestFuel onClose={close} />}
+
+      {applyUpdate && (
+        <div className="update" role="status">
+          <span className="update__bulb" />
+          <span className="update__text">A newer version is ready.</span>
+          <button className="btn btn--sm" onClick={applyUpdate}>Reload</button>
+        </div>
+      )}
 
       {msg && (
         <div role="status"

@@ -184,6 +184,20 @@ injecting a `<style>` tag to lock background scroll, which the policy blocks. It
 stylesheet. The console noise is Radix retrying; the behaviour is correct. Do not "fix" it by
 adding `'unsafe-inline'` — that would weaken the policy for the whole site to silence a log line.
 
+### Updates
+
+The worker never activates itself — a forced reload could throw away a half-typed entry.
+It used to rely solely on every instance being closed, which turned out to be genuinely
+hard to achieve on a phone, where backgrounding is not closing; an installed app could sit
+on a stale build indefinitely. So the page now watches for a waiting worker and offers a
+**Reload** prompt, and `reg.update()` runs on launch so the check does not wait for a
+navigation that may never come.
+
+Recovering an app stuck on a build from *before* this change is the one case this cannot
+help with: that old worker has no message handler to ask. Back up from the Bike tab, close
+every instance, and relaunch twice; failing that, remove and re-add the home-screen app and
+restore the backup — note that removing it on iOS deletes its data, hence backing up first.
+
 ### Service worker
 
 Generated after the build so its precache list holds the real hashed filenames, and the cache

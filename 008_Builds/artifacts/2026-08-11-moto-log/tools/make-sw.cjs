@@ -34,8 +34,14 @@ const PRECACHE = ${JSON.stringify(urls, null, 2)};
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE)));
-  // Deliberately no skipWaiting: a new build takes over on the next launch
-  // rather than reloading the page while you are part-way through an entry.
+  // Still no automatic skipWaiting — a build must not reload the page while you
+  // are part-way through an entry. But the page can now ask us to take over, so
+  // an update is one tap away instead of depending on every instance being
+  // closed, which is easy to get wrong on a phone.
+});
+
+self.addEventListener("message", event => {
+  if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
