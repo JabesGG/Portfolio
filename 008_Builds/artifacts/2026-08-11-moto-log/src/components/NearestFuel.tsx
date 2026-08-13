@@ -1,51 +1,77 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { nearest, prettyDistance, directionsUrl, type Near } from "@/lib/stations";
 
 type Phase =
-  | { k: "asking" }
+  | { k: "checking" }
+  | { k: "prime" }
+  | { k: "locating" }
   | { k: "ok"; list: Near[]; accuracy: number }
   | { k: "far"; km: number }
-  | { k: "denied" }
+  | { k: "blocked" }
   | { k: "failed"; why: string };
 
 /**
  * Where the nearest petrol is. The list is baked into the app, so this works
  * with no signal — which is the situation you are usually in when it matters.
  * Directions hand off to the phone's maps app: it has live traffic and routing,
- * this has a list that works offline. Each does the part it is good at.
+ * this has a list that works offline.
+ *
+ * Location is never requested on open. The browser only ever shows its prompt
+ * once, and a prompt that arrives unexplained gets dismissed — so we say what it
+ * is for and let you trigger it. Once a browser has been told to block, nothing
+ * in here can re-open that prompt; only settings can, and we say so plainly
+ * rather than offering a button that would do nothing.
  */
 export function NearestFuel({ onClose }: { onClose: () => void }) {
-  const [phase, setPhase] = useState<Phase>({ k: "asking" });
+  const [phase, setPhase] = useState<Phase>({ k: "checking" });
 
-  useEffect(() => {
+  const locate = useCallback(() => {
     if (!navigator.geolocation) {
       setPhase({ k: "failed", why: "This browser cannot report a location." });
       return;
     }
-    let live = true;
+    setPhase({ k: "locating" });
     navigator.geolocation.getCurrentPosition(
       pos => {
-        if (!live) return;
         const { latitude, longitude, accuracy } = pos.coords;
         const list = nearest(latitude, longitude, 5);
         // The list is Singapore only; well outside it, say so rather than
-        // pointing at a station 900 km away as though it were useful.
-        if (!list.length || list[0].km > 60) {
-          setPhase({ k: "far", km: list[0]?.km ?? 0 });
-        } else {
-          setPhase({ k: "ok", list, accuracy });
-        }
+        // pointing at a station on the other side of the world.
+        if (!list.length || list[0].km > 60) setPhase({ k: "far", km: list[0]?.km ?? 0 });
+        else setPhase({ k: "ok", list, accuracy });
       },
       err => {
-        if (!live) return;
-        if (err.code === err.PERMISSION_DENIED) setPhase({ k: "denied" });
-        else setPhase({ k: "failed", why: err.code === err.TIMEOUT ? "Timed out getting a fix." : "Could not get a location fix." });
+        if (err.code === err.PERMISSION_DENIED) setPhase({ k: "blocked" });
+        else setPhase({
+          k: "failed",
+          why: err.code === err.TIMEOUT ? "Timed out getting a fix." : "Could not get a location fix.",
+        });
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
     );
-    return () => { live = false; };
   }, []);
+
+  // Skip the explanation when permission is already granted — asking someone to
+  // confirm something they have already allowed is just a wasted tap.
+  useEffect(() => {
+    let live = true;
+    const decide = async () => {
+      try {
+        const st = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
+        if (!live) return;
+        if (st?.state === "granted") locate();
+        else if (st?.state === "denied") setPhase({ k: "blocked" });
+        else setPhase({ k: "prime" });
+      } catch {
+        // Permissions API unavailable (older Safari): offer the button and let
+        // the geolocation call itself be the source of truth.
+        if (live) setPhase({ k: "prime" });
+      }
+    };
+    void decide();
+    return () => { live = false; };
+  }, [locate]);
 
   return (
     <Dialog open onOpenChange={o => { if (!o) onClose(); }}>
@@ -59,29 +85,47 @@ export function NearestFuel({ onClose }: { onClose: () => void }) {
             <DialogTitle className="sheet__title">Nearest fuel</DialogTitle>
           </div>
 
-          {phase.k === "asking" && (
-            <p className="field__h !mt-0">Getting a location fix…</p>
+          {phase.k === "checking" && <p className="field__h !mt-0">One moment…</p>}
+
+          {phase.k === "prime" && (
+            <>
+              <div className="empty !border-t-0 !pt-0">
+                <b>Where are you?</b>
+                To list the closest stations the app needs your location. Your phone will ask you
+                to allow it. Nothing is sent anywhere — every station is already stored in the app,
+                and the distances are worked out on your phone.
+              </div>
+              <button className="btn btn--full" onClick={locate}>Use my location</button>
+            </>
           )}
 
-          {phase.k === "denied" && (
-            <div className="empty">
-              <b>Location is off</b>
-              Allow location for this site in your browser settings, then try again. Nothing is
-              sent anywhere — the station list is already on your phone and the lookup happens
-              here.
-            </div>
+          {phase.k === "locating" && <p className="field__h !mt-0">Getting a location fix…</p>}
+
+          {phase.k === "blocked" && (
+            <>
+              <div className="empty !border-t-0 !pt-0">
+                <b>Location is blocked</b>
+                Your browser is refusing location for this site, and only it can undo that — no
+                button here can re-open the prompt. Find <b className="inline">Location</b> in the
+                site settings for this page and set it to Allow, then try again.
+              </div>
+              <button className="btn btn--ghost btn--full" onClick={locate}>Try again</button>
+            </>
           )}
 
           {phase.k === "failed" && (
-            <div className="empty">
-              <b>No fix</b>
-              {phase.why} Under cover or in a basement carpark it can take a moment — step
-              outside and try again.
-            </div>
+            <>
+              <div className="empty !border-t-0 !pt-0">
+                <b>No fix</b>
+                {phase.why} Under cover or in a basement carpark it can take a moment — step
+                outside and try again.
+              </div>
+              <button className="btn btn--ghost btn--full" onClick={locate}>Try again</button>
+            </>
           )}
 
           {phase.k === "far" && (
-            <div className="empty">
+            <div className="empty !border-t-0 !pt-0">
               <b>Nothing nearby</b>
               {/* The distance is worth stating just over the border, where it tells
                   you something. At 10,000 km it is only noise. */}
@@ -121,7 +165,7 @@ export function NearestFuel({ onClose }: { onClose: () => void }) {
           )}
 
           <div className="flex gap-2 mt-[18px] pt-[14px] border-t" style={{ borderColor: "var(--rule-2)" }}>
-            <button type="button" className="btn flex-1" onClick={onClose}>Close</button>
+            <button type="button" className="btn btn--ghost flex-1" onClick={onClose}>Close</button>
           </div>
         </div>
       </DialogContent>

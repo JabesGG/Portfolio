@@ -404,6 +404,7 @@
   .btn--danger { background: none; color: var(--lamp-red); border-color: color-mix(in srgb, var(--lamp-red) 45%, transparent); }
   .btn--danger:hover { background: color-mix(in srgb, var(--lamp-red) 10%, transparent); opacity: 1; }
   .btn--sm { padding: 8px 13px; font-size: 11.5px; }
+  .btn--full { width: 100%; justify-content: center; }
 
   .sheet__title {
     font-family: var(--display); font-variation-settings: 'wdth' 84;
