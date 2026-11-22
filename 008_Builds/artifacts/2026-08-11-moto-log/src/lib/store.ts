@@ -6,9 +6,6 @@ export const KEY = "motolog.v1";
 /** The garage: every bike plus rider-level settings. */
 export const GARAGE_KEY = "motolog.v2";
 export const THEME_KEY = "motolog.theme";
-/** Sync code and revision. Kept out of the garage so neither a backup file nor
- *  the synced copy itself ever carries the secret. */
-export const SYNC_KEY = "motolog.sync";
 
 /** The forecourt brands in Singapore, as they appear in the station list. */
 export const BRANDS = ["Shell", "Esso", "Caltex", "SPC", "Sinopec", "Cnergy", "SMART Energy"];

@@ -91,21 +91,21 @@ export const projects = [
     title: "Moto Log",
     tagline: "A service and running-cost logbook that works with no signal",
     year: "2026",
-    tags: ["Web Development", "TypeScript", "React", "Offline PWA"],
+    tags: ["Web Development", "TypeScript", "React", "Offline PWA", "Supabase"],
     // Readings are facts about the build, shown as an instrument reports them.
     // Keep them true and checkable — that is the whole point of the device.
     readings: [
-      { v: "0", k: "network calls" },
-      { v: "44", k: "assertions" },
-      { v: "374", k: "kB shipped" },
+      { v: "0", k: "calls until you sign in" },
+      { v: "328", k: "automated checks" },
+      { v: "147", k: "kB to first use" },
     ],
     image: "/projects/moto-log.svg",
     caseStudy: true,
-    role: "Built it end to end — interface, domain logic, offline delivery and native packaging.",
+    role: "Built it end to end — interface, domain logic, offline delivery, sync and native packaging.",
     detail:
       "An installable app that tracks service intervals, renewal dates and cost per kilometre, and keeps working at the pump with no signal.",
     more:
-      "Moto Log is a maintenance record that behaves like an instrument rather than a spreadsheet. The odometer is the primary control: every interval and every cost-per-kilometre figure derives from it, and the dashboard shows only the tell-tales that are actually lit, so the screen is never a wall of green ticks. Intervals run on two clocks at once — distance and time — and whichever expires first is the one that speaks, so brake fluid nags on months while the chain nags on kilometres. Fuel economy is measured full tank to full tank, with part-fills accumulated into the next full tank rather than each producing a figure that looks precise and is wrong. It is a small app with an unusually strict brief: it holds a maintenance record, so it must not lose data, and it is used standing at a petrol station, so it must not need a connection.",
+      "Moto Log is a maintenance record that behaves like an instrument rather than a spreadsheet. The odometer is the primary control: every interval and every cost-per-kilometre figure derives from it, and the dashboard shows only the tell-tales that are actually lit, so the screen is never a wall of green ticks. Intervals run on two clocks at once — distance and time — and whichever expires first is the one that speaks, so brake fluid nags on months while the chain nags on kilometres. Fuel economy is measured full tank to full tank, with part-fills accumulated into the next full tank rather than each producing a figure that looks precise and is wrong. It is a small app with an unusually strict brief: it holds a maintenance record, so it must not lose data, and it is used standing at a petrol station, so it must not need a connection. Accounts are optional and come later: signed out it talks to nobody, and signed in each record syncs on its own, so a phone and a laptop editing different things never overwrite each other, and when both edit the same one the later edit wins.",
     link: "https://jabezgoh.netlify.app/moto/",
   },
   {

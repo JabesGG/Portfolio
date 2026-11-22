@@ -3,14 +3,18 @@ import { alertsFor, dueNotifications, garageNotifications, groupAlerts } from ".
 import { fromV1, upgradeV1, normaliseGarage, parseBackup, photoIds, activeBook, bikeLabel } from "./src/lib/garage";
 import { yearlySpend, afterDiscount, fuelSavings, entrySpan, runPositions } from "./src/lib/calc";
 import { AI_ENABLED } from "./src/lib/ai";
+import {
+  stable, flatten, outgoing, markDirty, isPristine, applyRemote, syncRound, newCloudState, recJson, keyOf, toRow, rebase, keepNewDirt,
+  type Server, type Table, type Row, type CloudState,
+} from "./src/lib/records";
 import { renewalCost, coeExpiry, monthsBetween, coeNow } from "./src/lib/coe";
 import { addFix, newTrack, trackSecs, duration, pathToSvg, avgKph, type Fix } from "./src/lib/rides";
 import { bookXp, levelOf, badges } from "./src/lib/xp";
-import { decide, tidyCode, prettyCode, validCode, newCode } from "./src/lib/sync";
 import { buildPassport, passportHtml } from "./src/lib/passport";
 import { garageIcs } from "./src/lib/ics";
 import { WORKSHOPS, nearestWorkshops, telHref, waHref } from "./src/lib/workshops";
-import { guessBrand, seedGarage } from "./src/lib/store";
+import { guessBrand, seedGarage, newBook as newBookFrom } from "./src/lib/store";
+import { emptyGarage as emptyG } from "./src/lib/records";
 import { GUIDES, SYMPTOMS } from "./src/data/guides";
 import { distanceKm, bearingDeg, compass, nearest, prettyDistance, STATIONS } from "./src/lib/stations";
 import { addMonths, agoLabel, backupIsStale, dmy, money, km } from "./src/lib/format";
@@ -373,18 +377,6 @@ check("service badge", has("svc1"), true);
 check("ten tanks not yet", has("fuel10"), false);
 check("no backup, no backup badge", has("backup"), false);
 
-console.log("\n-- sync decisions --");
-check("nothing on the server → push", decide(0, true, null), "push");
-check("in step and unchanged → nothing", decide(3, false, 3), "none");
-check("in step with local changes → push", decide(3, true, 3), "push");
-check("server moved on, no local changes → adopt", decide(3, false, 5), "adopt");
-check("both changed → conflict", decide(3, true, 5), "conflict");
-check("codes are tidied", tidyCode("abcd-efgh 2345"), "ABCDEFGH2345");
-check("codes are shown in fours", prettyCode("ABCDEFGH2345"), "ABCD-EFGH-2345");
-check("a new code is valid", validCode(newCode()), true);
-check("a new code is 28 characters", newCode().length, 28);
-check("two new codes differ", newCode() !== newCode(), true);
-check("a short code is refused", validCode("ABCD"), false);
 
 console.log("\n-- bike passport --");
 const pp = buildPassport(S, { costs: false, fuel: false }, "2026-08-11");
@@ -438,5 +430,150 @@ check("every symptom has causes and checks", SYMPTOMS.every(x => x.causes.length
 check("symptom ids are unique", new Set(SYMPTOMS.map(x => x.id)).size, SYMPTOMS.length);
 check("every guide has points", GUIDES.every(x => x.points.length >= 4), true);
 
+console.log("\n-- cloud sync: records --");
+check("stable JSON sorts keys", stable({ b: 1, a: { d: 2, c: [3, { f: 4, e: 5 }] } }), '{"a":{"c":[3,{"e":5,"f":4}],"d":2},"b":1}');
+check("stable JSON drops undefined fields", stable({ a: 1, b: undefined }), '{"a":1}');
+const GS: Garage = fromV1(structuredClone(S));
+const flat = flatten(GS);
+check("a garage flattens to settings + bikes + entries + rides", flat.size, 1 + 1 + S.entries.length + 0);
+check("entries know their bike", flat.get(keyOf("entries", "f1"))!.bike, GS.bikes[0].id);
+check("the selected bike is not synced", JSON.stringify(flat.get(keyOf("settings", "me"))!.data).includes("active"), false);
+check("everything is outgoing before the first agreement", outgoing(GS, {}, {}, "T").length, flat.size);
+const agreed = Object.fromEntries([...flat].map(([k, r]) => [k, recJson(r)]));
+check("nothing is outgoing once agreed", outgoing(GS, agreed, {}, "T").length, 0);
+const edited = structuredClone(GS);
+edited.bikes[0].entries[0].amount = 99;
+const dA = markDirty(GS, edited, {}, "2026-11-23T01:00:00.000Z");
+check("an edit marks just that record", Object.keys(dA).join(","), keyOf("entries", edited.bikes[0].entries[0].id));
+const o1 = outgoing(edited, agreed, dA, "LATER");
+check("…and sends just that record, with the time of the edit", `${o1.length} ${o1[0].updated_at}`, "1 2026-11-23T01:00:00.000Z");
+const removed = structuredClone(GS);
+removed.bikes[0].entries = removed.bikes[0].entries.filter(e => e.id !== "x1");
+const o2 = outgoing(removed, agreed, {}, "T");
+check("a deletion goes out as a tombstone", `${o2.length} ${o2[0].deleted} ${o2[0].rec.id}`, "1 true x1");
+check("…still saying which bike it was on", toRow(o2[0], "u").bike_id, GS.bikes[0].id);
+check("a fresh install is pristine", isPristine(seedGarage()), true);
+check("a garage with records is not", isPristine(GS), false);
+const typed = seedGarage(); typed.bikes[0].bike.name = "The CB";
+check("a fresh install with a name typed in is not", isPristine(typed), false);
+const row = (t: Table, id: string, data: Record<string, unknown>, at: string, extra: Partial<Row> = {}) =>
+  ({ t, row: { id, data, updated_at: at, deleted: false, synced_at: at, bike_id: t === "entries" || t === "rides" ? GS.bikes[0].id : null, ...extra } as Row });
+// jsonb hands keys back in its own order; that must not read as a change.
+const scrambled = Object.fromEntries(Object.entries(GS.bikes[0].entries[0]).reverse());
+const noop = applyRemote(GS, [row("entries", "f1", scrambled, "2026-11-23T02:00:00Z")], agreed, {});
+check("a row that matches, keys in any order, changes nothing", noop.changed, false);
+check("…and is not sent back", outgoing(noop.garage, noop.snap, {}, "T").length, 0);
+const newer = applyRemote(GS, [row("entries", "f1", { ...GS.bikes[0].entries[0], amount: 50 }, "2026-11-23T02:00:00Z")], agreed, {});
+check("another device's edit to an untouched record is taken", newer.garage.bikes[0].entries.find(e => e.id === "f1")!.amount, 50);
+const theirsLater = applyRemote(edited, [row("entries", edited.bikes[0].entries[0].id, { ...edited.bikes[0].entries[0], amount: 7 }, "2026-11-23T03:00:00Z")], agreed, dA);
+check("both edited, theirs later → theirs", theirsLater.garage.bikes[0].entries[0].amount, 7);
+const oursLater = applyRemote(edited, [row("entries", edited.bikes[0].entries[0].id, { ...edited.bikes[0].entries[0], amount: 7 }, "2026-11-23T00:30:00Z")], agreed, dA);
+check("both edited, ours later → ours, and still to send", `${oursLater.garage.bikes[0].entries[0].amount} ${outgoing(oursLater.garage, oursLater.snap, dA, "T").length}`, "99 1");
+const tomb = applyRemote(GS, [row("entries", "x1", {}, "2026-11-23T02:00:00Z", { deleted: true })], agreed, {});
+check("a deletion elsewhere removes an untouched record", tomb.garage.bikes[0].entries.some(e => e.id === "x1"), false);
+const orphan = applyRemote(GS, [{ t: "entries" as Table, row: { id: "zz", bike_id: "no-such-bike", data: { id: "zz" }, updated_at: "2026-11-23T02:00:00Z", deleted: false, synced_at: "2026-11-23T02:00:00Z" } }], agreed, {});
+check("an entry for a bike that is gone is not filed anywhere", orphan.changed, false);
+const fromNothing = applyRemote(emptyG(), [...flat].map(([, r]) => ({ t: r.t, row: { id: r.id, bike_id: r.bike ?? null, data: r.data, updated_at: "2026-11-23T00:00:00Z", deleted: false, synced_at: "2026-11-23T00:00:00Z" } as Row })), {}, {});
+check("a whole garage can be rebuilt from rows", `${fromNothing.garage.bikes.length} ${fromNothing.garage.bikes[0].entries.length} ${fromNothing.garage.active === fromNothing.garage.bikes[0].id}`, `1 ${S.entries.length} true`);
+
+(async () => {
+console.log("\n-- cloud sync: two devices, one server --");
+// The same rules as the database trigger: the later edit wins, and every
+// accepted write gets a fresh server time.
+function fakeServer() {
+  const tables: Record<string, Map<string, Row & { user_id: string }>> = { bikes: new Map(), entries: new Map(), rides: new Map(), settings: new Map() };
+  let tick = Date.parse("2026-11-23T00:00:00Z");
+  const stats = { writes: 0 };
+  const io: Server = {
+    async pull(t, since) {
+      return [...tables[t].values()].filter(r => !since || r.synced_at > since).sort((a, b) => (a.synced_at < b.synced_at ? -1 : 1));
+    },
+    async push(t, rows) {
+      stats.writes += rows.length;
+      return rows.map(r => {
+        const cur = tables[t].get(String(r.id));
+        if (cur && Date.parse(String(r.updated_at)) < Date.parse(cur.updated_at)) return cur;
+        tick += 1000;
+        const next = { ...(r as unknown as Row & { user_id: string }), bike_id: (r.bike_id as string) ?? null, synced_at: new Date(tick).toISOString() };
+        tables[t].set(String(r.id), next);
+        return next;
+      });
+    },
+  };
+  return { io, tables, stats };
+}
+let clock = Date.parse("2026-11-23T05:00:00Z");
+const now = () => new Date(clock += 1000).toISOString();
+type Dev = { g: Garage; st: CloudState };
+async function round(d: Dev, io: Server): Promise<Dev> {
+  const r = await syncRound(d.g, d.st, io, now);
+  return { g: r.garage, st: r.state };
+}
+function edit(d: Dev, fn: (g: Garage) => void): Dev {
+  const next = structuredClone(d.g);
+  fn(next);
+  next.updated = now();
+  return { g: next, st: { ...d.st, dirtyAt: markDirty(d.g, next, d.st.dirtyAt, next.updated) } };
+}
+const srv = fakeServer();
+let phone: Dev = { g: fromV1(structuredClone(S)), st: newCloudState("u1") };
+let laptop: Dev = { g: seedGarage(), st: newCloudState("u1") };
+phone = await round(phone, srv.io);
+check("first sign-in uploads every record", srv.tables.entries.size, S.entries.length);
+check("…and nothing is left to send", outgoing(phone.g, phone.st.snap, phone.st.dirtyAt, "T").length, 0);
+const laptopFirst = await syncRound(laptop.g, laptop.st, srv.io, now);
+laptop = { g: laptopFirst.garage, st: laptopFirst.state };
+check("a fresh install signing in becomes the rider's garage", `${laptopFirst.adopted} ${laptop.g.bikes.length} ${laptop.g.bikes[0].entries.length}`, `true 1 ${S.entries.length}`);
+check("…without uploading its empty starter bike", srv.tables.bikes.size, 1);
+const bikeId = phone.g.bikes[0].id;
+phone = edit(phone, g => { g.bikes[0].entries.push({ id: "p1", type: "expense", date: "2026-11-20", odo: 0, cat: "Other", amount: 5 }); });
+laptop = edit(laptop, g => { g.bikes[0].entries.push({ id: "l1", type: "expense", date: "2026-11-21", odo: 0, cat: "Other", amount: 6 }); });
+phone = await round(phone, srv.io); laptop = await round(laptop, srv.io); phone = await round(phone, srv.io);
+const ids = (d: Dev) => d.g.bikes[0].entries.map(e => e.id).sort().join(",");
+check("entries added on two devices are both kept, on both", ids(phone) === ids(laptop) && ids(phone).includes("p1") && ids(phone).includes("l1"), true);
+phone = edit(phone, g => { g.bikes[0].entries.find(e => e.id === "f1")!.amount = 11; });
+laptop = edit(laptop, g => { g.bikes[0].entries.find(e => e.id === "f1")!.amount = 22; });
+phone = await round(phone, srv.io); laptop = await round(laptop, srv.io); phone = await round(phone, srv.io);
+const f1 = (d: Dev) => d.g.bikes[0].entries.find(e => e.id === "f1")!.amount;
+check("the same entry edited on both: the later edit wins everywhere", `${f1(phone)} ${f1(laptop)}`, "22 22");
+laptop = edit(laptop, g => { g.bikes[0].entries = g.bikes[0].entries.filter(e => e.id !== "x2"); });
+laptop = await round(laptop, srv.io); phone = await round(phone, srv.io);
+check("a deletion on one device reaches the other", phone.g.bikes[0].entries.some(e => e.id === "x2"), false);
+check("…and the server keeps it as a tombstone", srv.tables.entries.get("x2")!.deleted, true);
+phone = edit(phone, g => { g.prefs.fuelDiscounts = { Shell: 5 }; g.active = g.bikes[0].id; });
+phone = await round(phone, srv.io); laptop = await round(laptop, srv.io);
+check("settings travel", laptop.g.prefs.fuelDiscounts.Shell, 5);
+phone = edit(phone, g => { const b = newBookFrom(); b.bike.name = "Scooter"; g.bikes.push(b); });
+phone = await round(phone, srv.io); laptop = await round(laptop, srv.io);
+check("a second bike reaches the other device", laptop.g.bikes.map(b => b.bike.name).includes("Scooter"), true);
+check("…without changing which bike it has selected", laptop.g.active, bikeId);
+const srvBefore = srv.stats.writes;
+phone = await round(phone, srv.io); laptop = await round(laptop, srv.io);
+check("rounds with nothing new send nothing", srv.stats.writes - srvBefore, 0);
+check("…and settle: nothing outgoing on either", outgoing(phone.g, phone.st.snap, phone.st.dirtyAt, "T").length + outgoing(laptop.g, laptop.st.snap, laptop.st.dirtyAt, "T").length, 0);
+// A device with its own records signs in to an account that already has some.
+let old: Dev = { g: fromV1({ ...structuredClone(S), entries: [{ id: "o1", type: "expense", date: "2025-01-01", odo: 0, cat: "Other", amount: 1 }] }), st: newCloudState("u1") };
+old = await round(old, srv.io);
+check("a device with its own records merges rather than replaces", old.g.bikes.length >= 2 && old.g.bikes.some(b => b.entries.some(e => e.id === "o1")), true);
+phone = await round(phone, srv.io);
+check("…and its records reach the others", phone.g.bikes.some(b => b.entries.some(e => e.id === "o1")), true);
+// The rider types while a round is in flight.
+const startG = phone.g;
+const startDirt = phone.st.dirtyAt;
+laptop = edit(laptop, g => { g.bikes[0].entries.find(e => e.id === "f1")!.amount = 33; });
+laptop = await round(laptop, srv.io);
+const inflight = syncRound(phone.g, phone.st, srv.io, now);
+phone = edit(phone, g => { g.bikes[0].entries.push({ id: "mid", type: "expense", date: "2026-11-22", odo: 0, cat: "Other", amount: 2 }); g.bikes[0].entries = g.bikes[0].entries.filter(e => e.id !== "p1"); });
+const done = await inflight;
+const merged = rebase(startG, phone.g, done.garage);
+phone = { g: merged, st: { ...done.state, dirtyAt: keepNewDirt(startDirt, phone.st.dirtyAt, done.state.dirtyAt) } };
+check("an edit made during a sync survives it", merged.bikes[0].entries.some(e => e.id === "mid"), true);
+check("…so does a deletion", merged.bikes[0].entries.some(e => e.id === "p1"), false);
+check("…and the round's own news is still there", merged.bikes[0].entries.find(e => e.id === "f1")!.amount, 33);
+phone = await round(phone, srv.io); laptop = await round(laptop, srv.io);
+check("…and both go out next round", `${laptop.g.bikes[0].entries.some(e => e.id === "mid")} ${laptop.g.bikes[0].entries.some(e => e.id === "p1")}`, "true false");
+
+})().then(() => {
 console.log("\n" + (fails ? `FAILED: ${fails}` : "All checks passed") + "\n");
 process.exit(fails ? 1 : 0);
+});

@@ -149,9 +149,12 @@ const clocks = [
         <div class="focus-item">
           <h3 class="focus-label">It must not lose data</h3>
           <p class="focus-body">
-            There is no account and no server, so the browser holds the only copy. That makes
-            export a feature rather than an afterthought: JSON for restoring, CSV for anything
-            else. The native build swaps browser storage for the platform's own key store, because
+            Signed out, there is no account and no server, so the browser holds the only copy.
+            That makes export a feature rather than an afterthought: JSON for restoring, CSV for
+            anything else. An optional account keeps a second copy in Supabase, one row per
+            record behind row-level security, so a phone and a laptop editing different things
+            never overwrite each other, and a deletion still reaches a device that was offline
+            when it happened. The native build swaps browser storage for the platform's own key store, because
             iOS is free to evict a web app's storage when space runs short — an acceptable
             trade for a cache, not for a service history.
           </p>
@@ -182,10 +185,13 @@ const clocks = [
       <p class="seclabel"><span class="dot"></span>Proving it</p>
       <p class="cs-body">
         The parts worth getting right are arithmetic, so they are written as pure functions with
-        no interface attached and checked by 44 assertions against a worked example: full-to-full
+        no interface attached and checked by assertions against a worked example: full-to-full
         fuel economy, which of the two clocks wins, month-end date handling, and what the tell-tales
         should read. One of those assertions caught my own arithmetic rather than the code's, which
-        is the point of writing them down.
+        is the point of writing them down. Sync is held to the same standard: two simulated devices
+        against a simulated server with the database's rules, the schema itself in an in-process
+        Postgres, and the built app in a headless browser under this site's real security policy.
+        328 checks in all.
       </p>
     </section>
 

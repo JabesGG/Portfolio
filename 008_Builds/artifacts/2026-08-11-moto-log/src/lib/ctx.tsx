@@ -13,8 +13,8 @@ export interface Api {
   update(fn: (draft: State) => void): void;
   /** Mutate a clone of the whole garage — switching bikes, settings, adding a bike. */
   updateGarage(fn: (draft: Garage) => void): void;
-  /** Swap in a whole garage: restore, erase, or a copy from another device.
-   *  Pass `synced` for a copy that came from the server, so it is not sent back. */
+  /** Swap in a whole garage: restore or erase.
+   *  Pass `synced` for a copy that came from the account, so it is not sent back. */
   replaceGarage(next: Garage, synced?: boolean): void;
   openSheet(kind: Exclude<SheetKind, null>, entry?: Entry): void;
   go(tab: Tab): void;

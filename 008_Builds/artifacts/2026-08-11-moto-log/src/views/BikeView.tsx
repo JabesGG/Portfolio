@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/lib/ctx";
 import { Panel } from "@/components/Lamp";
-import { SyncPanel } from "@/components/SyncPanel";
+import { AccountPanel } from "@/components/AccountPanel";
+import { useCloud } from "@/lib/cloud";
 import { statusOf, dateStatus, csv } from "@/lib/calc";
 import { addMonths, agoLabel, backupIsStale, dmy, num, todayISO } from "@/lib/format";
 import { seedGarage, newBook, uid, GARAGE_KEY } from "@/lib/store";
@@ -52,6 +53,7 @@ function toDrafts(s: State) {
 
 export function BikeView() {
   const { s, g, update, updateGarage, replaceGarage, toast } = useApp();
+  const signedIn = useCloud().status === "signed-in";
   const [d, setD] = useState(() => toDrafts(s));
   const fileRef = useRef<HTMLInputElement>(null);
   const [durable, setDurable] = useState<Durability>("unknown");
@@ -345,8 +347,10 @@ export function BikeView() {
         </p>
       </Panel>
 
+      <AccountPanel />
+
       <Panel title="Your data" note={`${totalEntries} ${totalEntries === 1 ? "entry" : "entries"}`}>
-        <p className={`backup ${backupIsStale(g.lastBackup, totalEntries > 0) ? "backup--stale" : ""}`}>
+        <p className={`backup ${!signedIn && backupIsStale(g.lastBackup, totalEntries > 0) ? "backup--stale" : ""}`}>
           <span className="backup__bulb" />
           <span>
             {agoLabel(g.lastBackup)}
@@ -355,8 +359,12 @@ export function BikeView() {
           </span>
         </p>
         <p className="field__h !mt-0 mb-3">
-          Everything lives on this device only. Back it up before you clear your browsing data or
-          switch phones. A backup holds {g.bikes.length > 1 ? `all ${g.bikes.length} bikes` : "your bike"},
+          {signedIn
+            ? <>Your records are kept in your account as well as on this device. A backup file is still
+                yours to keep, independent of any server.</>
+            : <>Everything lives on this device only. Back it up before you clear your browsing data or
+                switch phones, or sign in above to keep a copy in an account.</>}
+          {" "}A backup holds {g.bikes.length > 1 ? `all ${g.bikes.length} bikes` : "your bike"},
           your settings and your receipt photos.
         </p>
         <div className="grid grid-cols-2 gap-2 mb-2">
@@ -405,9 +413,10 @@ export function BikeView() {
         )}
         <button className="btn btn--danger btn--sm w-full"
                 onClick={() => {
-                  if (!confirm(g.bikes.length > 1
+                  if (!confirm((g.bikes.length > 1
                     ? `Erase all ${g.bikes.length} bikes, every entry, and your photos? This can't be undone.`
-                    : "Erase every entry, interval, photo and bike detail? This can't be undone.")) return;
+                    : "Erase every entry, interval, photo and bike detail? This can't be undone.")
+                    + (signedIn ? "\n\nYou're signed in, so this erases them from your account and your other devices too." : ""))) return;
                   void clearPhotos();
                   replaceGarage(seedGarage());
                   toast("Erased.");
@@ -435,7 +444,8 @@ export function BikeView() {
                      toast("Bike added from the backup.");
                      return;
                    }
-                   if (!confirm(`Replace everything on this device with the backup (${p.garage.bikes.length} ${p.garage.bikes.length === 1 ? "bike" : "bikes"})?`)) return;
+                   if (!confirm(`Replace everything on this device with the backup (${p.garage.bikes.length} ${p.garage.bikes.length === 1 ? "bike" : "bikes"})?`
+                     + (signedIn ? "\n\nYou're signed in, so your account and other devices will match the backup too." : ""))) return;
                    void putPhotos(p.photos).catch(() => toast("Records restored, but the photos would not fit here."));
                    replaceGarage(p.garage);
                    toast("Backup restored.");
@@ -450,7 +460,6 @@ export function BikeView() {
         </p>
       </Panel>
 
-      <SyncPanel />
     </div>
   );
 }

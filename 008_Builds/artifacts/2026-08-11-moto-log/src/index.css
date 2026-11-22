@@ -719,10 +719,7 @@
   .chat__m--assistant { align-self: flex-start; background: var(--card-2); border-bottom-left-radius: 6px; }
   .chat__m--wait { color: var(--ink-3); font-size: 13px; }
 
-  .synccode {
-    font-family: var(--mono); font-size: 14px; letter-spacing: .04em; overflow-wrap: anywhere;
-    background: var(--card-2); border-radius: 12px; padding: 12px 13px; margin: 0 0 8px; user-select: all;
-  }
+  .acct__err { color: var(--lamp-red); }
   code { font-family: var(--mono); font-size: .92em; background: var(--card-2); border-radius: 6px; padding: 1px 5px; }
 
   /* --- bike passport: exists only on paper ------------------------------------ */

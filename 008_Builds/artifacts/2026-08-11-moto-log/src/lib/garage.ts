@@ -19,7 +19,7 @@ export function normaliseBook(raw: unknown): State | null {
   return p;
 }
 
-function normalisePrefs(raw: unknown): Prefs {
+export function normalisePrefs(raw: unknown): Prefs {
   const p = (raw && typeof raw === "object" ? raw : {}) as Partial<Prefs>;
   return {
     ...defaultPrefs(),

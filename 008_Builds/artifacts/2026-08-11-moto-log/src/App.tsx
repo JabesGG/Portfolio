@@ -8,7 +8,8 @@ import { watchForUpdate } from "@/lib/updates";
 import { syncReminders } from "@/lib/reminders";
 import { activeBook, bikeLabel, photoIds } from "@/lib/garage";
 import { gcPhotos } from "@/lib/photos";
-import { readSync, writeSync, syncOnce } from "@/lib/sync";
+import { startCloud, noteLocalChange, useCloud } from "@/lib/cloud";
+import { RecoverySheet } from "@/components/AccountPanel";
 import { useRecorder } from "@/lib/recorder";
 import type { Garage, Entry, FuelEntry, ServiceEntry, ExpenseEntry } from "@/lib/types";
 import { Dash } from "@/views/Dash";
@@ -75,7 +76,7 @@ function Book({ initial }: { initial: Garage }) {
   // against records that are no longer there.
   const [epoch, setEpoch] = useState(0);
   const rec = useRecorder();
-  const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cloud = useCloud();
 
   useEffect(() => {
     const el = document.documentElement;
@@ -121,46 +122,30 @@ function Book({ initial }: { initial: Garage }) {
     });
   };
 
-  /** One round of sync, quietly. Conflicts are left for the Bike tab to settle. */
-  const quietSync = () => {
-    void syncOnce(() => ref.current).then(out => {
-      if (out.kind === "adopted") {
-        ref.current = out.garage;
-        persist(out.garage);
-        setG(out.garage);
-        setEpoch(e => e + 1);
-        toast("Updated from your other device.");
-      } else if (out.kind === "conflict") {
-        toast("This device and another both changed — settle it in Bike › Sync.");
-      }
-    });
-  };
-
-  // Every change lands here. `synced` marks a copy that came from the server,
-  // which must not be flagged as a local change and bounced straight back.
+  // Every change lands here. `synced` marks a copy that came from the account,
+  // which must not be flagged as a local change and sent straight back.
   const commit = (next: Garage, synced = false) => {
     if (!synced) {
       next.updated = new Date().toISOString();
-      const st = readSync();
-      if (st) {
-        writeSync({ ...st, dirty: true });
-        if (pushTimer.current) clearTimeout(pushTimer.current);
-        pushTimer.current = setTimeout(quietSync, 4000);
-      }
+      noteLocalChange(ref.current, next);
     }
     ref.current = next;
     persist(next);
     setG(next);
   };
 
-  // Launch: pick up changes from another device, then tidy orphaned photos.
-  // Both wait a beat so they never compete with first paint.
+  // The account, if there is one: sync on launch and while the app is open.
+  // Then tidy orphaned photos, a beat later so it never competes with first paint.
   useEffect(() => {
-    const a = setTimeout(() => { if (readSync()) quietSync(); }, 1200);
+    const stop = startCloud({
+      get: () => ref.current,
+      set: (next, adopted) => { commit(next, true); if (adopted) setEpoch(e => e + 1); },
+      toast,
+    });
     const b = setTimeout(() => {
       if (storageReadOk()) void gcPhotos(photoIds(ref.current));
     }, 8000);
-    return () => { clearTimeout(a); clearTimeout(b); };
+    return () => { stop(); clearTimeout(b); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -252,7 +237,7 @@ function Book({ initial }: { initial: Garage }) {
         </Tabs.Root>
 
         <footer className="wrap colophon mt-8">
-          <span>Saved on this device · SGD · km</span>
+          <span>{cloud.status === "signed-in" ? "Synced to your account" : "Saved on this device"} · SGD · km</span>
           <span>
             {g.bikes.length > 1 && `${g.bikes.length} bikes · `}
             {s.entries.length} {s.entries.length === 1 ? "entry" : "entries"}
@@ -267,6 +252,7 @@ function Book({ initial }: { initial: Garage }) {
       {sheet.kind === "nearest" && <NearestFuel onClose={close} />}
       {sheet.kind === "workshops" && <Workshops onClose={close} />}
       {sheet.kind === "garage" && <GarageSheet onClose={close} />}
+      {cloud.recovery && <RecoverySheet />}
 
       {applyUpdate && (
         <div className="update" role="status">

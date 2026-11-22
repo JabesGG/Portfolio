@@ -1,10 +1,10 @@
-// Checks for the two server functions, run with plain Node:  node server/test.mjs
+// Checks for the server function (the parked AI mechanic), run with plain
+// Node:  node server/test.mjs
 //
-// The sync function is exercised through its real handler with an in-memory
-// store in place of Netlify Blobs; the AI function with a stand-in for the
-// upstream API. Nothing here touches the network.
+// It is exercised with a stand-in for the upstream API. Nothing here touches
+// the network. Sync no longer has a server function of ours: it is Supabase,
+// and its rules are tested by supabase/test-schema.mjs.
 import aiHandler, { bikeLine, tidyMessages } from "./moto-ai.mjs";
-import { handle as sync } from "./moto-sync.mjs";
 
 let fails = 0;
 function check(label, got, want) {
@@ -17,40 +17,6 @@ const SITE = "https://example.test";
 const req = (path, method, { headers = {}, body } = {}) =>
   new Request(SITE + path, { method, headers, body: body === undefined ? undefined : typeof body === "string" ? body : JSON.stringify(body) });
 const out = async res => ({ status: res.status, body: await res.json() });
-
-console.log("\n-- sync --");
-const mem = new Map();
-const store = {
-  async get(k) { return mem.has(k) ? JSON.parse(mem.get(k)) : null; },
-  async setJSON(k, v) { mem.set(k, JSON.stringify(v)); },
-  async delete(k) { mem.delete(k); },
-};
-const CODE = "ABCDEFGHJKLMNPQRSTUVWXYZ2345";
-const OTHER = "ZZZZEFGHJKLMNPQRSTUVWXYZ2345";
-const H = { "x-sync-code": CODE };
-const garage = n => ({ v: 2, active: "a", bikes: [{ id: "a", n }], prefs: {} });
-
-check("no code is refused", (await out(await sync(req("/api/moto-sync", "GET"), store))).status, 401);
-check("a short code is refused", (await out(await sync(req("/api/moto-sync", "GET", { headers: { "x-sync-code": "ABC" } }), store))).status, 401);
-check("lower-case code is refused", (await out(await sync(req("/api/moto-sync", "GET", { headers: { "x-sync-code": CODE.toLowerCase() } }), store))).status, 401);
-check("nothing stored yet", await out(await sync(req("/api/moto-sync", "GET", { headers: H }), store)), { status: 404, body: { error: "empty" } });
-check("first save is revision 1", await out(await sync(req("/api/moto-sync", "PUT", { headers: H, body: { baseRev: 0, garage: garage(1) } }), store)), { status: 200, body: { rev: 1 } });
-const got = await out(await sync(req("/api/moto-sync", "GET", { headers: H }), store));
-check("the copy comes back", [got.status, got.body.rev, got.body.garage.bikes[0].n], [200, 1, 1]);
-const clash = await out(await sync(req("/api/moto-sync", "PUT", { headers: H, body: { baseRev: 0, garage: garage(2) } }), store));
-check("a stale save is a conflict, with the newer copy", [clash.status, clash.body.rev, clash.body.garage.bikes[0].n], [409, 1, 1]);
-check("a save on the current revision goes through", await out(await sync(req("/api/moto-sync", "PUT", { headers: H, body: { baseRev: 1, garage: garage(3) } }), store)), { status: 200, body: { rev: 2 } });
-check("another code sees nothing", (await out(await sync(req("/api/moto-sync", "GET", { headers: { "x-sync-code": OTHER } }), store))).status, 404);
-check("the code itself is never a storage key", [...mem.keys()].some(k => k.includes(CODE)), false);
-check("storage keys are hashes", [...mem.keys()].every(k => /^[0-9a-f]{64}$/.test(k)), true);
-check("not a garage is refused", (await out(await sync(req("/api/moto-sync", "PUT", { headers: H, body: { baseRev: 2, garage: { bikes: "no" } } }), store))).status, 400);
-check("broken JSON is refused", (await out(await sync(req("/api/moto-sync", "PUT", { headers: H, body: "{nope" }), store))).status, 400);
-check("an oversized copy is refused", (await out(await sync(req("/api/moto-sync", "PUT", { headers: H, body: { baseRev: 2, garage: { bikes: [], pad: "x".repeat(1_600_000) } } }), store))).status, 413);
-check("another site's page is refused", (await out(await sync(req("/api/moto-sync", "GET", { headers: { ...H, origin: "https://evil.example" } }), store))).status, 403);
-check("this site's own page is allowed", (await out(await sync(req("/api/moto-sync", "GET", { headers: { ...H, origin: SITE } }), store))).status, 200);
-check("other methods are refused", (await out(await sync(req("/api/moto-sync", "POST", { headers: H, body: {} }), store))).status, 405);
-check("delete removes the copy", await out(await sync(req("/api/moto-sync", "DELETE", { headers: H }), store)), { status: 200, body: { ok: true } });
-check("…and it is gone", (await out(await sync(req("/api/moto-sync", "GET", { headers: H }), store))).status, 404);
 
 console.log("\n-- AI mechanic --");
 check("bike line is built from the details", bikeLine({ make: "Honda", model: "CB400", year: "2019", odo: 28476 }),

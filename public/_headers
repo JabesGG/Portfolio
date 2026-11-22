@@ -9,9 +9,12 @@
 # for anything embedded from elsewhere. Moto Log (/moto/) needs it for nearest
 # fuel, workshops and ride recording. With geolocation=() the browser refused
 # outright, before it ever asked the rider.
+#
+# connect-src: Moto Log's optional account talks to its Supabase project, and
+# to nothing else. Everything else on the site still only talks to itself.
 
 /*
-  Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://uderotopoaxwvjtyigqy.supabase.co; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY

@@ -12,13 +12,14 @@ React 19 + TypeScript + Tailwind + shadcn/ui (Radix primitives), bundled by Parc
 | **Costs** | Totals, cost per km, 12-month chart, category split, year-by-year table, fuel economy. |
 | **Ride** | GPS ride recording: distance, time, speed, a sketch of the route; can add to the odometer. |
 | **Tools** | Workshops and fuel finder, fuel-card discounts and pump-price ranking, COE calculator, guides and a symptom troubleshooter, bike passport, level and badges. |
-| **Bike** (the gear in the header) | Bike details and COE, renewal dates, service intervals, calendar reminders, backup/restore, sync. |
+| **Bike** (the gear in the header) | Bike details and COE, renewal dates, service intervals, calendar reminders, account and sync, backup/restore. |
 
 Tap the bike's name in the header to switch bikes or add one.
 
 Everything works offline and stays on the device, with one exception that is **off until
-you turn it on**: sync between devices. An AI mechanic is written but parked. Both are
-described under [Online features](#online-features).
+you sign in**: an optional account (Supabase) that syncs your records and receipt photos
+between devices. An AI mechanic is written but parked. Both are described under
+[Online features](#online-features).
 
 Ships three ways from one codebase:
 
@@ -41,12 +42,14 @@ straight into that form.
 
 | Path | What it is |
 |------|------------|
-| `src/lib/` | Pure logic — calculations, formatting, storage, reminders, COE, ride filtering, XP, passport, sync decisions. No UI, no framework (bar three small React hooks: `ctx`, `locate`, `recorder`). |
+| `src/lib/` | Pure logic — calculations, formatting, storage, reminders, COE, ride filtering, XP, passport, record-level sync (`records.ts`) and the Supabase client (`cloud.ts`). No UI, no framework (bar three small React hooks: `ctx`, `locate`, `recorder`). |
 | `src/views/` | The six screens: five tabs, plus Bike behind the gear. |
 | `src/components/` | Sheets and shared pieces; `tools/` holds the panels of the Tools tab. |
 | `src/components/ui/` | shadcn. |
 | `src/data/` | Baked-in data: fuel stations, workshops, guides. |
-| `server/` | The two Netlify functions (AI mechanic, sync) and their tests. Deployed by copying — see [Rebuild](#rebuild). |
+| `server/` | The (parked) AI mechanic Netlify function and its tests. |
+| `supabase/schema.sql` | The account database: tables, row-level security, the receipts bucket and `delete_me()`. Paste into Supabase's SQL Editor; safe to run again. |
+| `supabase/test-schema.mjs` | 25 checks of that schema in PGlite (in-process Postgres) with stub `auth` and `storage` schemas: isolation between riders, later-edit-wins, photo folders, account deletion. |
 | `src/main.tsx` / `main-single.tsx` / `main-native.tsx` | One entry per target. Only the native one imports Capacitor. |
 | `icons/`, `manifest.webmanifest` | PWA assets. Icons are generated — see `tools/make-icons.cjs`. |
 | `tools/make-icons.cjs` | Renders the app icons as PNGs with no image dependencies (raw pixels + zlib). The mark is a seven-segment odometer readout. |
@@ -55,8 +58,8 @@ straight into that form.
 | `tools/fetch-stations.cjs` | Build-time OpenStreetMap query → `src/data/stations.json`. Re-run occasionally; stations open and close. |
 | `tools/fetch-workshops.cjs` | The same for motorcycle workshops and dealers → `src/data/workshops.json`. |
 | `tools/check-build.cjs` | Fails the build if a runtime-assembled class was dropped from the stylesheet, or if anything inline ended up in `index.html`. Both have shipped broken before. |
-| `verify.ts` | 218 assertions over the calculations, reminders, garage migration and backups, COE, GPS filtering, XP, sync decisions, passport, calendar export and the bundled data. |
-| `server/test.mjs` | 42 assertions over the two server functions, with an in-memory store and a stand-in for the AI API. |
+| `verify.ts` | 248 assertions over the calculations, reminders, garage migration and backups, COE, GPS filtering, XP, passport, calendar export, the bundled data, and sync — including two simulated devices against a simulated server with the database's rules. |
+| `server/test.mjs` | 23 assertions over the AI function, with a stand-in for the AI API. |
 | `bundle.html` / `artifact.html` | Single-file builds. `artifact.html` is `bundle.html` with the outer `<!DOCTYPE>/<html>/<body>` stripped, because the artifact host supplies its own skeleton. |
 
 ## Run it locally
@@ -132,8 +135,9 @@ rather than becoming notifications that would be guesses.
 **Still to do for native:** ride recording and the two finders use the browser's geolocation,
 which inside the shell needs the location permission declared in the Android manifest and the
 iOS `Info.plist` (and `@capacitor/geolocation` with a background mode if rides are to record
-with the screen off). The AI mechanic and sync call `/api/…` relative to the page, which does
-not exist inside the shell; they show as unavailable there until given the site's full URL.
+with the screen off). The AI mechanic calls `/api/…` relative to the page, which does not
+exist inside the shell. Accounts talk to Supabase directly and need no change, but the
+email links (confirm, reset password) point at the website, not the app.
 
 ### Why neither file imports Capacitor
 
@@ -204,8 +208,6 @@ BUILD_STAMP="$(date -u '+%Y-%m-%d %H:%M UTC')" \
 node tools/make-sw.cjs                          # must run after the build
 node tools/check-build.cjs                      # classes present, nothing inline
 cp -r dist/. ../../../public/moto/
-mkdir -p ../../../netlify/functions
-cp server/moto-sync.mjs ../../../netlify/functions/     # moto-ai.mjs stays parked
 ```
 
 Old hashed files in `public/moto` are not removed by the copy. They do no harm — nothing
@@ -214,7 +216,7 @@ then.
 
 `pnpm build` runs the same typecheck → verify → Parcel → `make-sw` → `check-build` chain in
 one go (`pnpm dev`, `pnpm verify`, `pnpm serve` also exist). It does not set `BUILD_STAMP` or
-copy into `public/moto` or `netlify/functions` — set the stamp in your shell first and do the
+copy into `public/moto` — set the stamp in your shell first and do the
 copies yourself.
 `vite.config.ts` and the Vite dev dependencies are leftovers from before the switch to
 Parcel; nothing in the build uses them.
@@ -228,6 +230,12 @@ picked up the new build, which is the whole point of it.
 The site's CSP is `script-src 'self'` with **no** `'unsafe-inline'`, so an inlined bundle is
 blocked outright. Parcel's normal output — external, same-origin `.js` and `.css` — satisfies
 it as-is. Anything that injects an inline script breaks the page.
+
+That includes an **import map**. The Supabase library is loaded on demand (`import()`), and
+Parcel describes on-demand chunks to the browser with an inline `<script type=importmap>`
+whenever every target browser supports `import.meta.resolve`. The `browserslist` in
+`package.json` includes iOS/Safari 15, which does not, so Parcel embeds the chunk's URL in
+the main script instead. Narrow those targets and the build check fails on the import map.
 
 ### Location needs the site's permission header
 
@@ -371,9 +379,9 @@ the Costs tab states the first and last entry its totals run between.
 
 ## Online features
 
-Sync is **off by default**, and with it off the app makes no network requests beyond
-loading itself. Server functions live in `server/` and are deployed by copying them to
-`netlify/functions/` at the repo root; Netlify picks them up from there.
+Signed out — the default — the app makes no network requests beyond loading itself, and
+does not even download the Supabase library. The AI mechanic is a Netlify function in
+`server/`, parked.
 
 ### AI mechanic — parked
 
@@ -398,27 +406,51 @@ from other sites' pages refused, upstream errors logged for you but never shown 
 browser. **Set a monthly spend limit in the Anthropic console** — rate limits slow abuse,
 a spend limit ends it.
 
-### Sync — `server/moto-sync.mjs` → `/api/moto-sync`
+### Account and sync — Supabase
 
-No accounts. Turning sync on makes a 28-character random code (140 bits). The garage is
-stored in Netlify Blobs under the SHA-256 of that code, so the code is never written on the
-server. Whoever has the code can read, replace or delete that one copy — it is a password,
-and the app says so. It is kept in its own storage key (`motolog.sync`), outside the garage,
-so neither a backup file nor the synced copy carries it.
+Optional. Email and password, from the **Account** panel in the Bike tab. Project
+`uderotopoaxwvjtyigqy`; the client is `src/lib/cloud.ts`, the logic `src/lib/records.ts`,
+the database `supabase/schema.sql`.
 
-Each save carries the revision it was based on; if another device saved in between, the
-server answers 409 with the newer copy and the app asks which to keep rather than merging
-or silently overwriting. Receipt photos are not synced (too big); use a backup file.
-Turning sync off offers to delete the server's copy.
+**What's in the page.** The project URL and its *publishable* key. That key is meant to be
+public: alone it can only sign in, and every table and the photo bucket are guarded by
+row-level security, so a rider can only ever read or write their own rows. The secret key
+and the database password are never in this repo and the app never needs them.
 
-Needs `@netlify/blobs` in the **site's** `package.json` (the repo root), and no configuration.
-The site pins major version 10, which runs on Node 16 and up; version 11 needs Node 22.12.
+**What's stored.** One row per record — `settings` (your preferences), `bikes`, `entries`,
+`rides` — with the record as `jsonb`, plus a few columns pulled out for querying (type,
+date, odometer, amount, ride start, km). Which bike is selected and when this device last
+backed up are about the device, so they stay local. Receipt photos go to the private
+`receipts` bucket under `<your user id>/<photo id>.jpg` (JPEG only, 2 MB each).
 
-The store is opened with `consistency: "strong"`. Netlify Blobs defaults to eventual
-consistency, where a read can trail a write by up to a minute. The first deploy used the
-default and failed against the real service in a way the in-memory test store could not
-show: a read straight after a save came back empty, and a stale save was accepted instead
-of being reported as a conflict.
+**How sync works.** Each device keeps a snapshot of every record as last agreed with the
+server (`motolog.cloud`), and the time it last changed each one. A round pulls what changed
+since its last look (with a two-minute overlap), folds it in, sends what's new here, and
+reads back what the server kept. The database trigger keeps the **later edit** of any record
+and stamps every accepted write with server time; a deletion is a row marked `deleted`, so
+it reaches devices that were offline. Two devices editing different things never collide.
+Edits made while a round is in flight are replayed on top of its result (`rebase`). Rounds
+run on launch, a few seconds after each change, when the app comes back to the foreground or
+online, and every two minutes while it's open. Up to 12 photos move per round.
+
+**First sign-in.** A fresh install simply becomes your account's garage. A device that
+already has records merges them into the account, so signing in on your existing phone is
+also the migration.
+
+**Leaving.** *Sign out* asks whether to keep a copy on the device. *Delete account* removes
+the photos through the Storage API, then calls `delete_me()`, which deletes the login; every
+row goes with it (`on delete cascade`). The device keeps its own copy either way.
+
+#### Setting up the Supabase project (once)
+
+1. **SQL Editor** → paste all of `supabase/schema.sql` → Run.
+2. **Authentication → URL Configuration**: Site URL `https://jabezgoh.netlify.app/moto/`,
+   and add the same address under Redirect URLs. Confirmation and reset emails link there.
+3. **Authentication → Sign In / Providers → Email**: on. "Confirm email" can stay on.
+4. Supabase's built-in email sender only delivers to members of the project's team and only
+   a few an hour. Fine for you; before anyone else signs up, add your own SMTP under
+   **Authentication → Emails → SMTP Settings** (Resend, Brevo, etc.).
+5. The site's `public/_headers` must allow the project in `connect-src` (it does).
 
 ### What was left out, and why
 
@@ -439,5 +471,5 @@ Stored under `motolog.v2` — `localStorage` on the web, native Preferences in t
 with receipt photos in IndexedDB (`motolog-photos`).
 **Per browser and per origin**: the installed PWA, the hosted claude.ai artifact and a local
 `bundle.html` each keep their own separate garage, and a native build would keep a fourth. Pick
-one as the real log, or turn on sync. Back it up from the Bike tab; the JSON export is also
+one as the real log, or sign in on each so they share one account. Back it up from the Bike tab; the JSON export is also
 the migration path onto a native build.
