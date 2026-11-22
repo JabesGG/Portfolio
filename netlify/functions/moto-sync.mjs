@@ -76,7 +76,12 @@ export async function handle(req, store) {
 }
 
 export default async function handler(req) {
-  return handle(req, getStore("moto-sync"));
+  // Strong consistency is load-bearing. The default is "eventual": reads come
+  // from an edge cache that can trail a write by up to a minute. With that, a
+  // device joining straight after another turned sync on was told nothing was
+  // stored, and a save could not see the save just before it — so the revision
+  // check passed when it should have reported a conflict.
+  return handle(req, getStore({ name: "moto-sync", consistency: "strong" }));
 }
 
 export const config = {

@@ -412,6 +412,13 @@ or silently overwriting. Receipt photos are not synced (too big); use a backup f
 Turning sync off offers to delete the server's copy.
 
 Needs `@netlify/blobs` in the **site's** `package.json` (the repo root), and no configuration.
+The site pins major version 10, which runs on Node 16 and up; version 11 needs Node 22.12.
+
+The store is opened with `consistency: "strong"`. Netlify Blobs defaults to eventual
+consistency, where a read can trail a write by up to a minute. The first deploy used the
+default and failed against the real service in a way the in-memory test store could not
+show: a read straight after a save came back empty, and a stale save was accepted instead
+of being reported as a conflict.
 
 ### What was left out, and why
 
