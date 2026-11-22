@@ -112,12 +112,12 @@ export function totals(s: State): Totals {
 }
 
 export function monthlySpend(s: State, months: number) {
-  const out: { key: string; lab: string; total: number }[] = [];
+  const out: { key: string; lab: string; year: number; total: number }[] = [];
   const now = new Date();
   for (let i = months - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const mm = d.getMonth() + 1;
-    out.push({ key: `${d.getFullYear()}-${mm < 10 ? "0" : ""}${mm}`, lab: MON[d.getMonth()], total: 0 });
+    out.push({ key: `${d.getFullYear()}-${mm < 10 ? "0" : ""}${mm}`, lab: MON[d.getMonth()], year: d.getFullYear(), total: 0 });
   }
   const idx: Record<string, { total: number }> = {};
   out.forEach(o => { idx[o.key] = o; });
@@ -151,3 +151,74 @@ export function csv(s: State): string {
 }
 
 export { todayISO };
+
+export interface YearRow {
+  year: string; total: number; fuel: number; service: number; other: number;
+  /** Distance logged that year, from the odometer readings on entries and rides. */
+  km: number; entries: number;
+}
+
+/** Spending by calendar year, newest first. Distance is the spread of odometer
+ *  readings within the year, which undercounts the first year slightly but never
+ *  invents kilometres. */
+export function yearlySpend(s: State): YearRow[] {
+  const rows: Record<string, YearRow & { lo: number; hi: number }> = {};
+  const row = (y: string) =>
+    (rows[y] ??= { year: y, total: 0, fuel: 0, service: 0, other: 0, km: 0, entries: 0, lo: Infinity, hi: 0 });
+  for (const e of s.entries) {
+    const y = (e.date || "").slice(0, 4);
+    if (!/^\d{4}$/.test(y)) continue;
+    const r = row(y);
+    const a = num(e.amount);
+    r.total += a; r.entries++;
+    if (e.type === "fuel") r.fuel += a;
+    else if (e.type === "service") r.service += a;
+    else r.other += a;
+    const o = num(e.odo);
+    if (o > 0) { r.lo = Math.min(r.lo, o); r.hi = Math.max(r.hi, o); }
+  }
+  return Object.values(rows)
+    .map(({ lo, hi, ...r }) => ({ ...r, km: hi > lo && isFinite(lo) ? hi - lo : 0 }))
+    .sort((a, b) => (a.year < b.year ? 1 : -1));
+}
+
+/** What fuel-card discounts have saved, from fills where the pump price was kept. */
+export function fuelSavings(s: State): number {
+  let saved = 0;
+  for (const e of s.entries) {
+    if (e.type === "fuel" && num(e.pump) > num(e.amount)) saved += num(e.pump) - num(e.amount);
+  }
+  return saved;
+}
+
+/** Paid after a percentage discount, to the cent. */
+export function afterDiscount(pump: number, pct: number): number {
+  const p = Math.min(100, Math.max(0, num(pct)));
+  return Math.round(num(pump) * (100 - p)) / 100;
+}
+
+/** First and last dated entry, so every total can say what period it covers. */
+export function entrySpan(s: State): { from: string; to: string } | null {
+  const dates = s.entries.map(e => e.date).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d || "")).sort();
+  return dates.length ? { from: dates[0], to: dates[dates.length - 1] } : null;
+}
+
+/**
+ * Where each economy run sits along a time axis, 0–1, by the date of the fill
+ * that closed it. A chart spaced evenly by run hides a three-month gap between
+ * fills; spaced by date it shows. Falls back to even spacing when the dates
+ * cannot carry an axis (missing, all the same day, or out of order).
+ */
+export function runPositions(runs: FuelRun[]): number[] {
+  const n = runs.length;
+  const even = runs.map((_, i) => (n > 1 ? i / (n - 1) : 0.5));
+  const ts = runs.map(r => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(r.to.date || "");
+    return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : NaN;
+  });
+  if (n < 2 || ts.some(t => isNaN(t))) return even;
+  for (let i = 1; i < n; i++) if (ts[i] < ts[i - 1]) return even;
+  const span = ts[n - 1] - ts[0];
+  if (span <= 0) return even;
+  return ts.map(t => (t - ts[0]) / span);
+}

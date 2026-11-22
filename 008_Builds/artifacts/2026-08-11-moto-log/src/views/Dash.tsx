@@ -1,9 +1,9 @@
 import { useApp } from "@/lib/ctx";
 import { Odometer } from "@/components/Odometer";
-import { Lamp, Stat, Empty, Panel, QuickAdd, FindFuel } from "@/components/Lamp";
+import { Lamp, Stat, Empty, Panel, QuickAdd, FindFuel, FindWorkshop } from "@/components/Lamp";
 import { EntryRow } from "@/components/EntryRow";
 import { statusOf, dateStatus, entriesSorted, totals, monthlySpend, fuelRuns } from "@/lib/calc";
-import { money0 } from "@/lib/format";
+import { money0, MON } from "@/lib/format";
 import type { Status } from "@/lib/types";
 
 export function Dash() {
@@ -20,6 +20,8 @@ export function Dash() {
 
   const t = totals(s);
   const thisMonth = monthlySpend(s, 1)[0].total;
+  const today = new Date();
+  const monthName = `${MON[today.getMonth()]} ${today.getFullYear()}`;
   const recent = entriesSorted(s).slice(0, 5);
   const runs = fuelRuns(s);
   const kmplById = new Map(runs.map(r => [r.to.id, r.kmpl]));
@@ -28,26 +30,25 @@ export function Dash() {
     <div className="grid gap-[14px] lg:grid-cols-[390px_1fr] items-start">
       <div className="flex flex-col gap-[14px]">
         <section className="cluster">
-          <div className="flex justify-between items-baseline mb-[10px]">
+          <div className="flex justify-between items-center mb-[12px]">
             <span className="eyebrow">Odometer</span>
-            <span className="panel__note">{s.bike.odo ? "tap to update" : "not set"}</span>
+            <span className="cluster__hint">{s.bike.odo ? "Tap to update" : "Tap to set"}</span>
           </div>
           <Odometer value={s.bike.odo} onEdit={() => openSheet("odo")} />
-          <p className="text-xs mt-[11px]" style={{ color: "var(--ink-3)" }}>
-            Every interval below counts from this number.
-          </p>
+          <p className="cluster__foot">Every service interval counts from this number.</p>
         </section>
 
-        <Panel title="Log something">
+        <Panel title="Quick add">
           <QuickAdd onPick={k => openSheet(k)} />
-          <div className="mt-2">
+          <div className="mt-2 grid grid-cols-2 gap-2">
             <FindFuel onPick={() => openSheet("nearest")} />
+            <FindWorkshop onPick={() => openSheet("workshops")} />
           </div>
         </Panel>
       </div>
 
       <div className="flex flex-col gap-[14px]">
-        <Panel title="Tell-tales" note={lit.length ? `${lit.length} lit` : "all dark"}>
+        <Panel title="Needs attention" note={lit.length ? `${lit.length} due` : "All clear"}>
           {lit.length > 0 ? (
             <ul>{lit.map((l, i) => <Lamp key={i} name={l.name} st={l.st} />)}</ul>
           ) : clear.length > 0 ? (
@@ -56,8 +57,8 @@ export function Dash() {
             </Empty>
           ) : (
             <Empty title="No baselines yet">
-              Open <b className="inline">Bike</b> and set when each item was last done — that&rsquo;s
-              what the lamps read from.
+              Open <button className="linkish" onClick={() => go("bike")}>Bike</button> and set when
+              each item was last done — that&rsquo;s what the reminders count from.
             </Empty>
           )}
 
@@ -80,7 +81,7 @@ export function Dash() {
           <Stat v={money0(t.total)} k="Total spent" />
           <Stat v={t.perKm ? `$${t.perKm.toFixed(3)}` : "—"} k="Per km" />
           <Stat v={t.kmpl ? t.kmpl.toFixed(1) : "—"} k="km / litre" />
-          <Stat v={money0(thisMonth)} k="This month" />
+          <Stat v={money0(thisMonth)} k={`Spent in ${monthName}`} />
         </div>
 
         {recent.length > 0 && (

@@ -1,33 +1,46 @@
 import { useEffect, useRef, useState } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
+import { ChartColumn, ChevronDown, House, LayoutGrid, List, Moon, Route, Settings, Sun, SunMoon, type LucideIcon } from "lucide-react";
 import { AppCtx, type Api, type Tab, type SheetKind } from "@/lib/ctx";
 import { THEME_KEY } from "@/lib/store";
-import { load, loadSync, save, requestPersistence } from "@/lib/storage";
+import { load, loadSync, save, requestPersistence, storageReadOk } from "@/lib/storage";
 import { watchForUpdate } from "@/lib/updates";
 import { syncReminders } from "@/lib/reminders";
-import type { State, Entry, FuelEntry, ServiceEntry, ExpenseEntry } from "@/lib/types";
+import { activeBook, bikeLabel, photoIds } from "@/lib/garage";
+import { gcPhotos } from "@/lib/photos";
+import { readSync, writeSync, syncOnce } from "@/lib/sync";
+import { useRecorder } from "@/lib/recorder";
+import type { Garage, Entry, FuelEntry, ServiceEntry, ExpenseEntry } from "@/lib/types";
 import { Dash } from "@/views/Dash";
 import { LogView } from "@/views/LogView";
 import { Costs } from "@/views/Costs";
 import { BikeView } from "@/views/BikeView";
+import { RideView } from "@/views/RideView";
+import { ToolsView } from "@/views/ToolsView";
 import { OdoSheet, FuelSheet, ServiceSheet, ExpenseSheet } from "@/components/Sheets";
 import { NearestFuel } from "@/components/NearestFuel";
+import { Workshops } from "@/components/Workshops";
+import { GarageSheet } from "@/components/GarageSheet";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "dash", label: "Dash" },
-  { id: "log", label: "Log" },
-  { id: "costs", label: "Costs" },
-  { id: "bike", label: "Bike" },
+/** The five places you go every day. Bike details and settings are a sixth,
+ *  opened from the gear in the header — set up once, visited rarely, and five
+ *  is what fits a thumb-reach bar without shrinking the targets. */
+const TABS: { id: Tab; label: string; Icon: LucideIcon }[] = [
+  { id: "dash", label: "Home", Icon: House },
+  { id: "log", label: "Log", Icon: List },
+  { id: "costs", label: "Costs", Icon: ChartColumn },
+  { id: "ride", label: "Ride", Icon: Route },
+  { id: "tools", label: "Tools", Icon: LayoutGrid },
 ];
 
 /**
- * The web reads its book synchronously, so `initial` is already populated on the
- * very first render and nothing flashes. Native storage is async, so there the
- * first render has nothing and we wait — which is why Book is a separate
+ * The web reads its garage synchronously, so `initial` is already populated on
+ * the very first render and nothing flashes. Native storage is async, so there
+ * the first render has nothing and we wait — which is why Book is a separate
  * component: it can take the loaded state as a prop and keep its hooks simple.
  */
 export default function App() {
-  const [initial, setInitial] = useState<State | null>(() => loadSync());
+  const [initial, setInitial] = useState<Garage | null>(() => loadSync());
 
   useEffect(() => {
     if (initial) return;
@@ -48,9 +61,9 @@ export default function App() {
   return <Book initial={initial} />;
 }
 
-function Book({ initial }: { initial: State }) {
-  const ref = useRef<State>(initial);
-  const [s, setS] = useState<State>(initial);
+function Book({ initial }: { initial: Garage }) {
+  const ref = useRef<Garage>(initial);
+  const [g, setG] = useState<Garage>(initial);
   const [tab, setTab] = useState<Tab>("dash");
   const [sheet, setSheet] = useState<{ kind: SheetKind; entry?: Entry }>({ kind: null });
   const [msg, setMsg] = useState<{ n: number; text: string } | null>(null);
@@ -58,6 +71,11 @@ function Book({ initial }: { initial: State }) {
   const [theme, setTheme] = useState<string>(() => {
     try { return localStorage.getItem(THEME_KEY) || ""; } catch { return ""; }
   });
+  // Bumped whenever the whole garage is swapped, so views drop drafts made
+  // against records that are no longer there.
+  const [epoch, setEpoch] = useState(0);
+  const rec = useRecorder();
+  const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const el = document.documentElement;
@@ -75,8 +93,8 @@ function Book({ initial }: { initial: State }) {
     return () => clearTimeout(id);
   }, [msg]);
 
-  // Rescheduled from scratch whenever the book changes. No-op on the web.
-  useEffect(() => { void syncReminders(s); }, [s]);
+  // Rescheduled from scratch whenever the garage changes. No-op on the web.
+  useEffect(() => { void syncReminders(g); }, [g]);
 
   // Ask once per launch to have this data exempted from eviction. Silent either
   // way — it can only improve on the default, and nothing depends on it.
@@ -97,72 +115,148 @@ function Book({ initial }: { initial: State }) {
 
   const toast = (text: string) => setMsg(m => ({ n: (m?.n ?? 0) + 1, text }));
 
-  const persist = (next: State) => {
+  const persist = (next: Garage) => {
     save(next).then(ok => {
       if (!ok) toast("Couldn't save — storage is full or blocked.");
     });
   };
 
+  /** One round of sync, quietly. Conflicts are left for the Bike tab to settle. */
+  const quietSync = () => {
+    void syncOnce(() => ref.current).then(out => {
+      if (out.kind === "adopted") {
+        ref.current = out.garage;
+        persist(out.garage);
+        setG(out.garage);
+        setEpoch(e => e + 1);
+        toast("Updated from your other device.");
+      } else if (out.kind === "conflict") {
+        toast("This device and another both changed — settle it in Bike › Sync.");
+      }
+    });
+  };
+
+  // Every change lands here. `synced` marks a copy that came from the server,
+  // which must not be flagged as a local change and bounced straight back.
+  const commit = (next: Garage, synced = false) => {
+    if (!synced) {
+      next.updated = new Date().toISOString();
+      const st = readSync();
+      if (st) {
+        writeSync({ ...st, dirty: true });
+        if (pushTimer.current) clearTimeout(pushTimer.current);
+        pushTimer.current = setTimeout(quietSync, 4000);
+      }
+    }
+    ref.current = next;
+    persist(next);
+    setG(next);
+  };
+
+  // Launch: pick up changes from another device, then tidy orphaned photos.
+  // Both wait a beat so they never compete with first paint.
+  useEffect(() => {
+    const a = setTimeout(() => { if (readSync()) quietSync(); }, 1200);
+    const b = setTimeout(() => {
+      if (storageReadOk()) void gcPhotos(photoIds(ref.current));
+    }, 8000);
+    return () => { clearTimeout(a); clearTimeout(b); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const s = activeBook(g);
+
   const api: Api = {
-    s,
+    s, g,
     // clone-then-commit, so a StrictMode double-render can never double-apply
     update(fn) {
       const next = structuredClone(ref.current);
+      fn(activeBook(next));
+      commit(next);
+    },
+    updateGarage(fn) {
+      const next = structuredClone(ref.current);
       fn(next);
-      ref.current = next;
-      persist(next);
-      setS(next);
+      commit(next);
     },
-    replace(next) {
-      ref.current = next;
-      persist(next);
-      setS(next);
-    },
+    replaceGarage(next, synced) { commit(next, synced); setEpoch(e => e + 1); },
     openSheet(kind, entry) { setSheet({ kind, entry }); },
     go(t) { setTab(t); window.scrollTo(0, 0); },
     toast,
   };
 
   const close = () => setSheet({ kind: null });
-  const title = s.bike.name || [s.bike.year, s.bike.make, s.bike.model].filter(Boolean).join(" ");
+  const title = bikeLabel(s);
+  const named = title !== "Unnamed bike";
+  const recording = rec.status === "recording" || rec.status === "starting";
 
   return (
     <AppCtx.Provider value={api}>
       <div className="app">
-        <header className="wrap masthead">
-          <div>
-            <span className="eyebrow">Service &amp; running log</span>
-            <h1 className="masthead__bike">{title || "Set up your bike"}</h1>
-          </div>
-          <div className="flex items-center gap-[10px] shrink-0">
-            {s.bike.plate && <span className="plate">{s.bike.plate}</span>}
-            <button
-              className="themer"
-              title={`Theme: ${theme || "system"}`}
-              aria-label={`Switch theme, currently ${theme || "system"}`}
-              onClick={() => setTheme(t => (t === "dark" ? "light" : t === "light" ? "" : "dark"))}
-            >◐</button>
+        <header className="masthead">
+          <div className="wrap masthead__in">
+            <div className="min-w-0">
+              {s.bike.plate
+                ? <span className="plate">{s.bike.plate}</span>
+                : <span className="eyebrow">Moto Log</span>}
+              <button className="masthead__pick" onClick={() => setSheet({ kind: "garage" })}
+                      aria-label={`${named ? title : "Set up your bike"} — switch bike`}>
+                <h1 className="masthead__bike">{named ? title : "Set up your bike"}</h1>
+                <span className="masthead__caret" aria-hidden="true"><ChevronDown size={20} strokeWidth={2.5} /></span>
+              </button>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                className="themer"
+                title={`Theme: ${theme || "system"}`}
+                aria-label={`Switch theme, currently ${theme || "system"}`}
+                onClick={() => setTheme(t => (t === "dark" ? "light" : t === "light" ? "" : "dark"))}
+              >
+                {theme === "dark" ? <Moon size={18} /> : theme === "light" ? <Sun size={18} /> : <SunMoon size={18} />}
+              </button>
+              <button
+                className="themer"
+                title="Bike details and settings"
+                aria-label="Bike details and settings"
+                aria-pressed={tab === "bike"}
+                onClick={() => { setTab("bike"); window.scrollTo(0, 0); }}
+              >
+                <Settings size={18} />
+              </button>
+            </div>
           </div>
         </header>
 
         <Tabs.Root value={tab} onValueChange={v => { setTab(v as Tab); window.scrollTo(0, 0); }}>
-          <Tabs.List className="wrap tabs" aria-label="Sections">
-            {TABS.map(t => (
-              <Tabs.Trigger key={t.id} value={t.id} className="tab">{t.label}</Tabs.Trigger>
+          <Tabs.List className="tabs" aria-label="Sections">
+            {TABS.map(({ id, label, Icon }) => (
+              <Tabs.Trigger key={id} value={id} className="tab">
+                <span className="tab__ic">
+                  <Icon size={21} strokeWidth={2.1} />
+                  {id === "ride" && recording && <span className="tab__rec" aria-label="recording" />}
+                </span>
+                {label}
+              </Tabs.Trigger>
             ))}
           </Tabs.List>
 
-          <main className="wrap pt-5">
+          {/* Keyed by bike, so drafts and filters never carry across a switch. */}
+          <main className="wrap pt-5" key={`${s.id}:${epoch}`}>
             <Tabs.Content value="dash"><Dash /></Tabs.Content>
             <Tabs.Content value="log"><LogView /></Tabs.Content>
             <Tabs.Content value="costs"><Costs /></Tabs.Content>
+            <Tabs.Content value="ride"><RideView /></Tabs.Content>
+            <Tabs.Content value="tools"><ToolsView /></Tabs.Content>
             <Tabs.Content value="bike"><BikeView /></Tabs.Content>
           </main>
         </Tabs.Root>
 
-        <footer className="wrap colophon mt-7">
+        <footer className="wrap colophon mt-8">
           <span>Saved on this device · SGD · km</span>
-          <span>{s.entries.length} {s.entries.length === 1 ? "entry" : "entries"}</span>
+          <span>
+            {g.bikes.length > 1 && `${g.bikes.length} bikes · `}
+            {s.entries.length} {s.entries.length === 1 ? "entry" : "entries"}
+          </span>
         </footer>
       </div>
 
@@ -171,6 +265,8 @@ function Book({ initial }: { initial: State }) {
       {sheet.kind === "service" && <ServiceSheet entry={sheet.entry as ServiceEntry | undefined} onClose={close} />}
       {sheet.kind === "expense" && <ExpenseSheet entry={sheet.entry as ExpenseEntry | undefined} onClose={close} />}
       {sheet.kind === "nearest" && <NearestFuel onClose={close} />}
+      {sheet.kind === "workshops" && <Workshops onClose={close} />}
+      {sheet.kind === "garage" && <GarageSheet onClose={close} />}
 
       {applyUpdate && (
         <div className="update" role="status">
@@ -181,12 +277,7 @@ function Book({ initial }: { initial: State }) {
       )}
 
       {msg && (
-        <div role="status"
-             className="fixed left-1/2 bottom-6 -translate-x-1/2 z-[90] rounded px-4 py-[11px]
-                        text-[13px] max-w-[calc(100vw-32px)] shadow-lg"
-             style={{ background: "var(--metal)", color: "var(--face)", fontFamily: "var(--mono)" }}>
-          {msg.text}
-        </div>
+        <div role="status" className="toast">{msg.text}</div>
       )}
     </AppCtx.Provider>
   );

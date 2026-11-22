@@ -5,6 +5,12 @@ module.exports = {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  // Tailwind only keeps a class from index.css if it can find that exact word
+  // in the source. The tell-tale colours are assembled at runtime
+  // (`lamp--${level}`), so it never sees them and drops the rules — which left
+  // every lamp colourless in the built app while looking fine in the code.
+  // Any class built from a variable has to be listed here.
+  safelist: ["lamp--red", "lamp--amber", "lamp--green", "lamp--unset"],
   theme: {
     extend: {
       colors: {

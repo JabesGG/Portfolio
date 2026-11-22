@@ -4,10 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "oxlint",
-    "preview": "vite preview"
+    "dev": "parcel index.html --public-url /moto/",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "verify": "jiti verify.ts && node server/test.mjs",
+    "build": "tsc --noEmit -p tsconfig.app.json && jiti verify.ts && node server/test.mjs && parcel build index.html --public-url /moto/ --dist-dir dist --no-source-maps && node tools/make-sw.cjs && node tools/check-build.cjs",
+    "serve": "node tools/serve.cjs",
+    "lint": "oxlint"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.0",
@@ -60,6 +62,7 @@
   "devDependencies": {
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
+    "@netlify/blobs": "^11.1.9",
     "@parcel/config-default": "^2.16.4",
     "@parcel/packager-raw-url": "2.16.4",
     "@parcel/reporter-dev-server": "^2.16.4",
@@ -70,6 +73,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.5.4",
     "html-inline": "^1.2.0",
+    "jiti": "^1.21.7",
     "oxlint": "^1.75.0",
     "parcel": "^2.16.4",
     "parcel-resolver-tspaths": "^0.0.9",

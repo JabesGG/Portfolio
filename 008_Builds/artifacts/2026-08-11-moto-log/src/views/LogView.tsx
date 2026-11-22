@@ -17,7 +17,7 @@ export function LogView() {
   const kmplById = new Map(fuelRuns(s).map(r => [r.to.id, r.kmpl]));
 
   return (
-    <Panel title="Every entry" note={`${list.length} shown`}>
+    <Panel title="All entries" note={`${list.length} shown`}>
       <div className="mb-[14px]">
         <QuickAdd onPick={k => openSheet(k)} />
       </div>

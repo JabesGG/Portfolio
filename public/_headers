@@ -5,10 +5,15 @@
 # Keep this file and src/data/portfolio.js in agreement. The site publishes
 # these values on the page, so a mismatch is a visible bug.
 
+# geolocation=(self): location is allowed for this site's own pages only, never
+# for anything embedded from elsewhere. Moto Log (/moto/) needs it for nearest
+# fuel, workshops and ride recording. With geolocation=() the browser refused
+# outright, before it ever asked the rider.
+
 /*
   Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=(self), interest-cohort=()

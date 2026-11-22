@@ -36,6 +36,12 @@ export function dparts(iso: string): DParts | null {
   return { y: +b[0], m: +b[1], d: +b[2] };
 }
 
+/** "8 Aug 26" — for chart labels, where the full year will not fit. */
+export function dmyShort(iso: string): string {
+  const p = dparts(iso);
+  return p ? `${p.d} ${MON[p.m - 1]} ${String(p.y).slice(2)}` : "—";
+}
+
 export function dmy(iso: string): string {
   const p = dparts(iso);
   return p ? `${p.d} ${MON[p.m - 1]} ${p.y}` : "—";

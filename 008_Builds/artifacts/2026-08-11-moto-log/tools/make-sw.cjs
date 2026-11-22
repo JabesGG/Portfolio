@@ -1,5 +1,5 @@
 /* Writes dist/sw.js with a precache list of whatever the build actually produced.
-   Run after `vite build` — the asset filenames are content-hashed, so the list
+   Run after `parcel build` — the asset filenames are content-hashed, so the list
    (and therefore the cache name) changes exactly when the app changes. */
 const fs = require("fs");
 const path = require("path");
@@ -57,6 +57,10 @@ self.addEventListener("fetch", event => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
+  // Only the app's own files are ours to cache. Anything else on this origin —
+  // above all /api/, where a cached answer would mean sync silently serving an
+  // old copy forever — goes straight to the network.
+  if (!url.pathname.startsWith("${BASE}")) return;
 
   // Navigations always resolve to the app shell, so a deep link or a shortcut
   // still opens offline.

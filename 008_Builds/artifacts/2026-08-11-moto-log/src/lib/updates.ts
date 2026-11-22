@@ -11,8 +11,14 @@ export type OnUpdate = (apply: () => void) => void;
 export function watchForUpdate(onUpdate: OnUpdate): void {
   if (!("serviceWorker" in navigator)) return;
 
+  // On the very first visit there is no worker in control. When the freshly
+  // installed one claims the page, that is the app arriving, not an update —
+  // the page is already the current build, so reloading it would only blink
+  // the screen a second after it loaded and drop whatever was being typed.
+  let controlled = Boolean(navigator.serviceWorker.controller);
   let reloading = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!controlled) { controlled = true; return; }
     if (reloading) return;
     reloading = true;
     window.location.reload();

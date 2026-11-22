@@ -75,13 +75,9 @@ export function NearestFuel({ onClose }: { onClose: () => void }) {
 
   return (
     <Dialog open onOpenChange={o => { if (!o) onClose(); }}>
-      <DialogContent
-        className="max-w-[520px] gap-0 p-0 rounded-[6px] max-h-[92vh] overflow-y-auto"
-        style={{ background: "var(--card-c)", borderColor: "var(--rule)" }}
-      >
-        <div className="p-[18px]">
-          <div className="flex items-center justify-between gap-3 mb-4 pb-[11px] border-b-2"
-               style={{ borderColor: "var(--ink)" }}>
+      <DialogContent aria-describedby={undefined}>
+        <div className="sheet__body">
+          <div className="sheet__head">
             <DialogTitle className="sheet__title">Nearest fuel</DialogTitle>
           </div>
 
@@ -164,7 +160,7 @@ export function NearestFuel({ onClose }: { onClose: () => void }) {
             </>
           )}
 
-          <div className="flex gap-2 mt-[18px] pt-[14px] border-t" style={{ borderColor: "var(--rule-2)" }}>
+          <div className="sheet__foot">
             <button type="button" className="btn btn--ghost flex-1" onClick={onClose}>Close</button>
           </div>
         </div>

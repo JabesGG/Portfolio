@@ -1,6 +1,7 @@
+import { Fuel, MapPin, Receipt, Wrench } from "lucide-react";
 import type { Status } from "@/lib/types";
 
-/** An instrument-cluster tell-tale. Colour is the only saturated ink on the page. */
+/** One thing that is due, with how due it is. Red, amber and green mean only that. */
 export function Lamp({ name, st }: { name: string; st: Status }) {
   return (
     <li className={`lamp lamp--${st.level}`}>
@@ -46,18 +47,26 @@ export function Panel({
 export function QuickAdd({ onPick }: { onPick: (k: "fuel" | "service" | "expense") => void }) {
   return (
     <div className="grid grid-cols-3 gap-2">
-      <button className="qbtn" onClick={() => onPick("fuel")}><span>⛽</span>Fuel</button>
-      <button className="qbtn" onClick={() => onPick("service")}><span>🔧</span>Service</button>
-      <button className="qbtn" onClick={() => onPick("expense")}><span>🧾</span>Expense</button>
+      <button className="qbtn" onClick={() => onPick("fuel")}><span className="qbtn__ic"><Fuel size={21} /></span>Fuel</button>
+      <button className="qbtn" onClick={() => onPick("service")}><span className="qbtn__ic"><Wrench size={21} /></span>Service</button>
+      <button className="qbtn" onClick={() => onPick("expense")}><span className="qbtn__ic"><Receipt size={21} /></span>Expense</button>
     </div>
   );
 }
 
-/** Separate from QuickAdd: this finds something rather than recording something. */
+/** Separate from QuickAdd: these find something rather than recording something. */
 export function FindFuel({ onPick }: { onPick: () => void }) {
   return (
     <button className="qbtn qbtn--wide" onClick={onPick}>
-      <span>📍</span>Nearest fuel
+      <span className="qbtn__ic"><MapPin size={18} /></span>Nearest fuel
+    </button>
+  );
+}
+
+export function FindWorkshop({ onPick }: { onPick: () => void }) {
+  return (
+    <button className="qbtn qbtn--wide" onClick={onPick}>
+      <span className="qbtn__ic"><Wrench size={18} /></span>Workshops
     </button>
   );
 }
