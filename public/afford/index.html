@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can I Afford This?</title>
+<meta name="description" content="See what a big purchase really costs: loan, interest and running costs against your pay, with a clear verdict and what would make it work.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="mbar" id="mbar" aria-hidden="true"><b id="mbMonthly"></b><span>a month</span><span id="mbShare"></span><span class="chip" id="mbChip" data-level="none"></span></div>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">CAN I AFFORD THIS?</p>
+    <div class="tabs" id="presets" role="group" aria-label="Start from an example"></div>
+  </header>
+
+  <div class="layout">
+    <div class="left">
+      <section class="answer" id="answer" aria-live="polite">
+        <h1 id="headline"></h1>
+        <p class="sub" id="sub"></p>
+        <div class="verdict-row"><span class="chip" id="chip" data-level="none"></span><span class="why" id="why"></span></div>
+      </section>
+
+      <section class="chart">
+        <div class="panel-h"><h2>Where the money goes</h2><span class="small" id="chartUnit">running total</span></div>
+        <div id="chart"></div>
+      </section>
+
+      <section class="fixes" aria-labelledby="fixTitle">
+        <h2 id="fixTitle">To make it a stretch, change one thing</h2>
+        <div id="fixList"></div>
+        <div class="msg" id="fixMsg" role="status"></div>
+      </section>
+    </div>
+
+    <section class="right" aria-labelledby="slTitle">
+      <h2 id="slTitle" class="sl-title">Drag to see what changes the answer</h2>
+      <div class="legend" aria-label="Track colours">
+        <span><i class="sw-good"></i>Comfortable</span>
+        <span><i class="sw-warn"></i>A stretch</span>
+        <span><i class="sw-bad"></i>Not right now</span>
+      </div>
+      <div class="sliders" id="mainSliders"></div>
+      <button type="button" class="more-btn" id="moreBtn" aria-expanded="false" aria-controls="more">More settings: loan, running costs, safety net
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4 L6 8 L10 4" fill="none" stroke="currentColor" stroke-width="2"></path></svg></button>
+      <div class="more" id="more" hidden>
+        <div>
+          <p class="group-h" id="rtLabel">The interest rate is quoted as</p>
+          <div class="seg" role="group" aria-labelledby="rtLabel">
+            <button type="button" id="rtFlat" aria-pressed="true">Flat rate</button>
+            <button type="button" id="rtEff" aria-pressed="false">Effective rate</button>
+          </div>
+          <p class="note rt-note" id="rtNote"></p>
+        </div>
+        <div class="sliders" id="moreSliders"></div>
+        <p class="group-h">Running costs</p>
+        <div id="runRows"></div>
+        <button type="button" class="add" id="addRow">+ Add a running cost</button>
+        <div class="cur-row"><label for="currency" class="cur-label">Currency</label>
+          <select id="currency"><option value="S$">S$</option><option value="$">$</option><option value="A$">A$</option><option value="RM">RM</option><option value="£">£</option><option value="€">€</option><option value="₹">₹</option></select>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="cvc" aria-labelledby="cvcTitle">
+    <div class="panel-h"><h2 id="cvcTitle" class="h2-big">Borrow or pay cash?</h2><span class="small">Same running costs either way</span></div>
+    <p class="cvc-lede" id="cvcLede"></p>
+    <div class="cvc-grid" id="cvcGrid"></div>
+    <div class="cmp-actions" id="cvcActions">
+      <button type="button" class="btn-line" id="useCash">Switch to paying cash</button>
+      <button type="button" class="btn-line" id="saveBoth">Save both to compare</button>
+    </div>
+    <div class="msg" id="cvcMsg" role="status"></div>
+  </section>
+
+  <section class="compare" aria-labelledby="cmpTitle">
+    <div class="panel-h"><h2 id="cmpTitle" class="h2-big">Saved to compare</h2><span class="small" id="cmpNote">Up to three options.</span></div>
+    <div class="cmp-actions">
+      <button type="button" class="btn-dark" id="saveBtn">Save this option</button>
+      <button type="button" class="btn-line" id="copyBtn">Copy summary</button>
+    </div>
+    <div class="msg" id="cmpMsg" role="status"></div>
+    <div class="cmp-grid" id="cmpGrid"></div>
+  </section>
+
+  <footer class="foot">
+    <p><strong>How the verdict works.</strong> The monthly cost is comfortable at 10% of take-home pay or less, a stretch up to 20%, and too much above that. At least 10% of your pay should be left over each month. After the down payment, your savings should still cover the safety net you chose, counting this new cost.</p>
+    <p>Slider colours show the verdict you'd get by moving that one slider and keeping everything else the same. Example figures are rough Singapore prices; replace them with your own quotes. This is a rough guide, not financial advice.</p>
+  </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
